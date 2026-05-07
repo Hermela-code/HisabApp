@@ -1,0 +1,28 @@
+[33meb077a3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnabon-auth-ui[m[33m, [m[1;31morigin/nabon-auth-ui[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33meb077a3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnabon-auth-ui[m[33m, [m[1;31morigin/nabon-auth-ui[m[33m)[m HEAD@{1}: reset: moving to HEAD
+[33meb077a3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnabon-auth-ui[m[33m, [m[1;31morigin/nabon-auth-ui[m[33m)[m HEAD@{2}: checkout: moving from nabon-auth-ui to nabon-auth-ui
+[33meb077a3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnabon-auth-ui[m[33m, [m[1;31morigin/nabon-auth-ui[m[33m)[m HEAD@{3}: checkout: moving from victory to nabon-auth-ui
+[33m9013eaa[m[33m ([m[1;31morigin/victory[m[33m, [m[1;32mvictory[m[33m)[m HEAD@{4}: commit: Restored server structure and updated Victory's headers
+[33m8b89a28[m HEAD@{5}: checkout: moving from review to victory
+[33me4bf5d7[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mreview[m[33m)[m HEAD@{6}: commit: Fixed Kidist's push: Restored main.dart, fixed cashier headers, and integrated server
+[33mb713aca[m HEAD@{7}: commit: restoring the missing folders from hisab_server
+[33mbdc6bbb[m[33m ([m[1;31morigin/Nabon[m[33m)[m HEAD@{8}: checkout: moving from gelila to review
+[33mdd884d3[m[33m ([m[1;31morigin/gelila[m[33m, [m[1;32mgelila[m[33m)[m HEAD@{9}: commit: adding the delete confirmation widget
+[33m4296197[m HEAD@{10}: commit: adding add-staff form
+[33mcbbb12c[m HEAD@{11}: commit: adding add-product
+[33m858ace1[m HEAD@{12}: commit: fixed landing page
+[33m15b16a0[m HEAD@{13}: commit: landing page deisgn
+[33m2e09b7c[m HEAD@{14}: commit: fixing the database and server connection
+[33m60c3502[m HEAD@{15}: commit: fixing the database of the staff to store their sales recors in jason form
+[33m032bb9d[m HEAD@{16}: commit: adding the record_sale feature and staff_managing
+[33m7b98aa8[m HEAD@{17}: commit: adding add-branch,add-product and update-stock functionality
+[33m2dec550[m HEAD@{18}: commit: adding the backend logic to enable add attributes and finish the set up
+[33m36b10ca[m HEAD@{19}: commit: adding company table on database and fix the auth_controller.dart to send data to company table
+[33m24f7c8d[m HEAD@{20}: commit: setting up the backend folder and connecting the dart server with mysql database
+[33mfcbfbbf[m[33m ([m[1;32mmain[m[33m)[m HEAD@{21}: checkout: moving from main to gelila
+[33mfcbfbbf[m[33m ([m[1;32mmain[m[33m)[m HEAD@{22}: commit: fixing folder structure based on features
+[33m29546b5[m HEAD@{23}: commit: changing the position of readme
+[33mb30ee49[m HEAD@{24}: commit: renaming some of the file names
+[33m416ba43[m HEAD@{25}: commit: creating folders and file for each pages
+[33me7b0f14[m HEAD@{26}: commit: creating the basic folder structure
+[33m18d09cf[m HEAD@{27}: clone: from https://github.com/gelila0913/HisabApp.git
