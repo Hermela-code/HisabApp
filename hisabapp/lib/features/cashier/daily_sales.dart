@@ -1,34 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hisabapp/core/presentation/widgets/cashier_header.dart';
 
 class DailySales extends StatelessWidget {
   const DailySales({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Icon(Icons.menu, color: Colors.black87, size: 28),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.shopping_cart_checkout, color: Color(0xFFF2A007), size: 24),
-            const SizedBox(width: 8),
-            Text(
-              "HisabApp",
-              style: TextStyle(
-                color: Colors.black.withOpacity(0.8),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return CashierLayout(
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
