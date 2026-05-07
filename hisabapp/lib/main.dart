@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // Updated import path: point directly to the file containing DeleteProductView
-import 'package:hisabapp/core/presentation/widgets/modals/delete.dart';
+import 'package:hisabapp/features/Auth/registration/bussiness_type.dart';
 
 void main() {
   runApp(const HisabApp());
@@ -22,7 +22,7 @@ class HisabApp extends StatelessWidget {
         backgroundColor: Colors.white12,
         body: Center(
           // Removed the invalid 'const' keyword
-          child: DeleteProductView(), 
+          child: RoleSelectionScreen(), 
         ),
       ),
     );
