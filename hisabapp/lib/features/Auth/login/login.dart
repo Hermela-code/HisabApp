@@ -1,106 +1,111 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_theme.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _userNameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 80),
-
-              /// Logo
-              Icon(Icons.shopping_cart, size: 60, color: AppColors.primary),
-
+              // 1. Logo
+              Image.asset(
+                'assets/images/logo1.jpg',
+                height: 100,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(height: 20),
 
-              /// Title
+              // 2. Titles
               const Text(
-                "Log in",
+                'Log in',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-
               const SizedBox(height: 8),
-
-              /// Subtitle
               const Text(
-                "Enter your detail to get started with HisabApp",
+                'Enter your detail to get started\nwith HisabApp',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-
-              const SizedBox(height: 30),
-
-              /// Username
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text("User Name"),
-              ),
-              const SizedBox(height: 5),
-              TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
               ),
+              const SizedBox(height: 40),
 
+              // 3. Login Fields
+              _buildInputField(
+                label: 'User Name',
+                controller: _userNameController,
+              ),
               const SizedBox(height: 20),
-
-              /// Password
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text("Password"),
+              _buildInputField(
+                label: 'Password',
+                controller: _passwordController,
+                isPassword: true,
               ),
-              const SizedBox(height: 5),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 40),
 
-              const SizedBox(height: 30),
-
-              /// Login Button
+              // 4. Login Button
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
+                  onPressed: () {
+                    // TODO: Connect to backend auth
+                    print("Logging in user: ${_userNameController.text}");
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: const Color(0xFFF39C12), // Signature Orange
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  onPressed: () {},
-                  child: const Text("Login"),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
+              const SizedBox(height: 25),
 
-              const SizedBox(height: 20),
-
-              /// Signup Navigation
+              // 5. Signup Redirection
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? "),
+                  const Text(
+                    "Don't have an account? ",
+                    style: TextStyle(color: Colors.black87),
+                  ),
                   GestureDetector(
                     onTap: () {
-                      context.go('/signup');
+                      // TODO: Navigate to SignupScreen
+                      print("Navigate to Signup");
                     },
                     child: const Text(
-                      "Sign up",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      'Sign up',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ],
@@ -109,6 +114,42 @@ class LoginScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    bool isPassword = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: isPassword,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.orange, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
