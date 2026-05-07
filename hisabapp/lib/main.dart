@@ -22,7 +22,7 @@ class HisabApp extends StatelessWidget {
         backgroundColor: Colors.white12,
         body: Center(
           // Removed the invalid 'const' keyword
-          child: BusinessTypeScreen(), 
+          child: ProductAttributesScreen(), 
         ),
       ),
     );
