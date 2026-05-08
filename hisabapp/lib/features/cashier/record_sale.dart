@@ -1,27 +1,6 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Branch Manager',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: const RecordSalePage(),
-      routes: {
-        '/record-sale': (context) => const RecordSalePage(),
-      },
-    );
-  }
-}
+import 'package:go_router/go_router.dart';
+import '../../core/presentation/widgets/cashier_header.dart';
 
 class RecordSalePage extends StatefulWidget {
   const RecordSalePage({super.key});
@@ -79,18 +58,7 @@ class _RecordSalePageState extends State<RecordSalePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Record Sale'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+    return CashierLayout(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -514,7 +482,6 @@ class _RecordSalePageState extends State<RecordSalePage> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Show validation message
                   if (selectedElectronicsType == null ||
                       selectedProductName == null ||
                       selectedModel == null ||
@@ -526,12 +493,7 @@ class _RecordSalePageState extends State<RecordSalePage> {
                       const SnackBar(content: Text('Please fill all required fields')),
                     );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Recorded Sale: ${selectedProductName} - \$${totalController.text}'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    context.go('/cashier-daily-sales');
                   }
                 },
                 icon: const Icon(Icons.shopping_cart, size: 20, color: Colors.black),
@@ -559,9 +521,7 @@ class _RecordSalePageState extends State<RecordSalePage> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => context.go('/cashier-dashboard'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.black,
                   backgroundColor: Colors.white,

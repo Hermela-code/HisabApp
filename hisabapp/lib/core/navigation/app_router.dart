@@ -6,7 +6,15 @@ import '../../features/Auth/registration/attribute.dart';
 import '../../features/Auth/signup/signup.dart';
 import '../../features/Auth/login/login.dart';
 import '../../features/cashier/cashier_dashboard.dart';
+import '../../features/cashier/inventory.dart';
+import '../../features/cashier/record_sale.dart';
+import '../../features/cashier/daily_sales.dart';
+import '../../features/cashier/branch_cost.dart';
+import '../../features/cashier/export_archive.dart';
+import '../../features/cashier/staff_performance.dart';
 import '../../features/owner/owner_dashboard.dart';
+import '../../features/owner/branches.dart';
+import '../../features/owner/export_archive.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -16,7 +24,15 @@ class AppRouter {
   static const String signup = '/signup';
   static const String login = '/login';
   static const String cashierDashboard = '/cashier-dashboard';
+  static const String cashierInventory = '/cashier-inventory';
+  static const String cashierRecordSale = '/cashier-record-sale';
+  static const String cashierDailySales = '/cashier-daily-sales';
+  static const String cashierBranchCost = '/cashier-branch-cost';
+  static const String cashierExportArchive = '/cashier-export-archive';
+  static const String cashierStaff = '/cashier-staff';
   static const String ownerDashboard = '/owner-dashboard';
+  static const String ownerBranches = '/owner-branches';
+  static const String ownerExports = '/owner-exports';
 
   static final GoRouter router = GoRouter(
     initialLocation: landing,
@@ -50,8 +66,40 @@ class AppRouter {
         builder: (context, state) => const CashierDashboard(),
       ),
       GoRoute(
+        path: cashierInventory,
+        builder: (context, state) => const Inventory(),
+      ),
+      GoRoute(
+        path: cashierRecordSale,
+        builder: (context, state) => const RecordSalePage(),
+      ),
+      GoRoute(
+        path: cashierDailySales,
+        builder: (context, state) => const DailySales(),
+      ),
+      GoRoute(
+        path: cashierBranchCost,
+        builder: (context, state) => const BranchCost(),
+      ),
+      GoRoute(
+        path: cashierExportArchive,
+        builder: (context, state) => const ExportArchive(),
+      ),
+      GoRoute(
+        path: cashierStaff,
+        builder: (context, state) => const StaffPerformance(),
+      ),
+      GoRoute(
         path: ownerDashboard,
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: ownerBranches,
+        builder: (context, state) => const BranchPage(),
+      ),
+      GoRoute(
+        path: ownerExports,
+        builder: (context, state) => const ExportArchivePage(),
       ),
     ],
   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/widgets/cashier_header.dart';
 
 class CashierDashboard extends StatelessWidget {
@@ -28,7 +29,7 @@ class CashierDashboard extends StatelessWidget {
               width: 170,
               height: 45,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () => context.go('/cashier-record-sale'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF2A007),
                   foregroundColor: Colors.black,

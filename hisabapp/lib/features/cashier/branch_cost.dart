@@ -1,36 +1,29 @@
 import 'package:flutter/material.dart';
-// Importing the shared core widget for domain-validated inputs
-import '../../core/presentation/widgets/hisab_text_field.dart';
+import 'dart:ui';
+import '../../core/presentation/widgets/cashier_header.dart';
+import '../../core/presentation/widgets/modals/add_branchcost.dart';
 
 class BranchCost extends StatelessWidget {
   const BranchCost({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.only(left: 16.0),
-          child: Icon(Icons.menu, color: Colors.black87, size: 28),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.shopping_cart_checkout, color: Color(0xFFF2A007), size: 24),
-            const SizedBox(width: 8),
-            Text(
-              "HisabApp",
-              style: TextStyle(
-                color: Colors.black.withOpacity(0.8),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
+  void _showAddCostModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (_) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: const Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.symmetric(horizontal: 24),
+          child: AddBranchCostModal(),
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CashierLayout(
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
@@ -52,9 +45,7 @@ class BranchCost extends StatelessWidget {
               width: 160,
               height: 45,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // This will trigger the BLoC to handle the "Create" part of CRUD
-                },
+                onPressed: () => _showAddCostModal(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF2A007),
                   foregroundColor: Colors.black,

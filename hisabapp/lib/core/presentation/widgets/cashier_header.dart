@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 
 // --- 1. THE SHARED HEADER ---
@@ -92,35 +93,35 @@ class CashierSidebar extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(Icons.grid_view, "Dashboard", () {}),
-                _buildMenuItem(Icons.inventory_2_outlined, "Inventory", () {}),
-                _buildMenuItem(Icons.shopping_cart_outlined, "Record Sale", () {}),
-                _buildMenuItem(Icons.attach_money, "Daily Sales", () {}),
-                _buildMenuItem(Icons.monetization_on_outlined, "Branch Costs", () {}),
-                _buildMenuItem(Icons.ios_share_outlined, "Export / Archive", () {}),
-                _buildMenuItem(Icons.people_outline, "Staff", () {}),
-                _buildMenuItem(Icons.logout, "Logout", () {}),
+                _buildMenuItem(context, Icons.grid_view, "Dashboard", '/cashier-dashboard'),
+                _buildMenuItem(context, Icons.inventory_2_outlined, "Inventory", '/cashier-inventory'),
+                _buildMenuItem(context, Icons.shopping_cart_outlined, "Record Sale", '/cashier-record-sale'),
+                _buildMenuItem(context, Icons.attach_money, "Daily Sales", '/cashier-daily-sales'),
+                _buildMenuItem(context, Icons.monetization_on_outlined, "Branch Costs", '/cashier-branch-cost'),
+                _buildMenuItem(context, Icons.ios_share_outlined, "Export / Archive", '/cashier-export-archive'),
+                _buildMenuItem(context, Icons.people_outline, "Staff", '/cashier-staff'),
+                _buildMenuItem(context, Icons.logout, "Logout", '/select-role'),
               ],
             ),
           ),
 
           // SETTINGS AT BOTTOM
           const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-          _buildMenuItem(Icons.settings_outlined, "Settings", () {}),
+          _buildMenuItem(context, Icons.settings_outlined, "Settings", null),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildMenuItem(BuildContext context, IconData icon, String title, String? route) {
     return ListTile(
       leading: Icon(icon, color: Colors.white, size: 22),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
-      ),
-      onTap: onTap,
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
+      onTap: route == null ? null : () {
+        Navigator.pop(context);
+        context.go(route);
+      },
     );
   }
 }
