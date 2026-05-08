@@ -15,12 +15,14 @@ class _AddStockScreenState extends State<AddStockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Light background to make the white card stand out
       backgroundColor: Colors.grey[100],
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: ConstrainedBox(
+              // Scale down: limits the width so it looks like a modal on Chrome
               constraints: const BoxConstraints(maxWidth: 400),
               child: Container(
                 padding: const EdgeInsets.all(24.0),
@@ -29,26 +31,29 @@ class _AddStockScreenState extends State<AddStockScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min, // Shrinks card to content size
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
+                    // Header Section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const SizedBox(width: 32),
+                        const SizedBox(width: 32), // Balancing spacer
                         const Expanded(
                           child: Text(
                             'Add Stock',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         GestureDetector(
@@ -59,13 +64,13 @@ class _AddStockScreenState extends State<AddStockScreen> {
                     ),
                     const SizedBox(height: 25),
 
-                    // Units to Add
+                    // Units Input
                     _buildLabel("Units to Add"),
                     const SizedBox(height: 8),
                     _buildTextField(_unitsController, "e.g 20"),
                     const SizedBox(height: 20),
 
-                    // Price Row
+                    // Price Row (Two columns)
                     Row(
                       children: [
                         Expanded(
@@ -73,7 +78,8 @@ class _AddStockScreenState extends State<AddStockScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildLabel("New Selling Price"),
-                              const Text("(optional)", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text("(optional)", 
+                                style: TextStyle(fontSize: 12, color: Colors.grey)),
                               const SizedBox(height: 8),
                               _buildTextField(_sellingPriceController, "\$20,000"),
                             ],
@@ -85,7 +91,8 @@ class _AddStockScreenState extends State<AddStockScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildLabel("New Cost Price"),
-                              const Text("(optional)", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text("(optional)", 
+                                style: TextStyle(fontSize: 12, color: Colors.grey)),
                               const SizedBox(height: 8),
                               _buildTextField(_costPriceController, "\$15,000"),
                             ],
@@ -100,21 +107,25 @@ class _AddStockScreenState extends State<AddStockScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Buttons
+                    // Action Buttons
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Add Stock Logic
+                          // TODO: Add logic to update stock
+                          print("Stock added: ${_unitsController.text}");
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey[600],
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: const Text('Add Stock', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text('Add Stock', 
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -125,9 +136,12 @@ class _AddStockScreenState extends State<AddStockScreen> {
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.grey[300]!),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: const Text('Cancel', style: TextStyle(color: Colors.black)),
+                        child: const Text('Cancel', 
+                          style: TextStyle(color: Colors.black)),
                       ),
                     ),
                   ],
@@ -140,6 +154,7 @@ class _AddStockScreenState extends State<AddStockScreen> {
     );
   }
 
+  // Helper for consistent labels
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -147,6 +162,7 @@ class _AddStockScreenState extends State<AddStockScreen> {
     );
   }
 
+  // Helper for consistent TextFields with fixed syntax
   Widget _buildTextField(TextEditingController controller, String hint) {
     return TextField(
       controller: controller,
@@ -165,7 +181,11 @@ class _AddStockScreenState extends State<AddStockScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.orange, width: 2),
+        ),
+      ),
     );
   }
 }
