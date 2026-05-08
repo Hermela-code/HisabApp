@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class RoleSelectionScreen extends StatelessWidget {
+class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
+
+  @override
+  State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
+}
+
+class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
+  String? _selectedRole; // 'owner' or 'cashier'
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 1. Logo
               Image.asset(
-                'assets/images/logo1.jpg', // <-- Make sure your asset path is correct
-                height: 100,
+                'assets/images/logo1.jpg',
+                height: 70,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: 30),
-
-              // 2. Welcome & Role Text
+              const SizedBox(height: 16),
               const Text(
                 'Welcome to HisabApp',
                 style: TextStyle(
@@ -35,47 +40,59 @@ class RoleSelectionScreen extends StatelessWidget {
               const SizedBox(height: 10),
               const Text(
                 "You're logged in. How will you use the app today?",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  height: 1.4, // Improves readability for multi-line text
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.4),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 16),
               const Text(
                 'Select your role.',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
-              // 3. Action Cards
-              // These cards react when tapped. We'll add the navigation soon.
               RoleCard(
                 icon: Icons.storefront_outlined,
                 title: 'Owner',
-                description:
-                    'View all branches, manage operational costs, and profitability.',
-                onTap: () {
-                  // TODO: Navigate to Owner Dashboard
-                  print('Navigate to Owner Dashboard');
-                },
+                description: 'View all branches, manage operational costs, and profitability.',
+                isSelected: _selectedRole == 'owner',
+                onTap: () => setState(() => _selectedRole = 'owner'),
               ),
               const SizedBox(height: 20),
               RoleCard(
                 icon: Icons.shopping_cart_outlined,
                 title: 'Cashier',
-                description:
-                    'Record daily sales, manage inventory, branch cost, and export daily report.',
-                onTap: () {
-                  // TODO: Navigate to Cashier Dashboard
-                  print('Navigate to Cashier Dashboard');
-                },
+                description: 'Record daily sales, manage inventory, branch cost, and export daily report.',
+                isSelected: _selectedRole == 'cashier',
+                onTap: () => setState(() => _selectedRole = 'cashier'),
               ),
+
+              if (_selectedRole != null) ...[
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/business-type', extra: _selectedRole),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFA726),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _selectedRole == 'cashier'
+                          ? 'Continue as Cashier'
+                          : 'Continue as Owner',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -84,11 +101,11 @@ class RoleSelectionScreen extends StatelessWidget {
   }
 }
 
-/// A custom widget that builds the interactive role cards (Owner/Cashier)
 class RoleCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
+  final bool isSelected;
   final VoidCallback onTap;
 
   const RoleCard({
@@ -96,6 +113,7 @@ class RoleCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
+    required this.isSelected,
     required this.onTap,
   });
 
@@ -105,31 +123,28 @@ class RoleCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? const Color(0xFFFFA726) : Colors.transparent,
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05), // Soft shadow
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      // InkWell adds the tap effect without needing a complicated button widget
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Large Icon on the Left
-              Icon(
-                icon,
-                size: 50,
-                color: Colors.grey[700],
-              ),
-              const SizedBox(width: 20),
-              // Text Content (Expanded so it can use multiple lines smoothly)
+              Icon(icon, size: 36, color: Colors.grey[700]),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,20 +152,16 @@ class RoleCard extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       description,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        height: 1.4,
-                      ),
-                      maxLines: 3, // Prevents overly long text from breaking layout
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.4),
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],

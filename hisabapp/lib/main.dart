@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:hisabapp/features/cashier/cashier_dashboard.dart';
+import 'core/navigation/app_router.dart';
 
 void main() {
-  runApp(const HisabApp());
+  runApp(const MyApp());
 }
 
-class HisabApp extends StatelessWidget {
-  const HisabApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // This constructor tells Flutter to use GoRouter for all navigation
+    return MaterialApp.router(
+      routerConfig: AppRouter.router,
       title: 'HisabApp',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        primarySwatch: Colors.orange,
         useMaterial3: true,
-        fontFamily: 'Inter',
       ),
-      home: const CashierDashboard(),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hisabapp/core/presentation/theme/app_colors.dart'; 
+import 'package:go_router/go_router.dart';
+import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -83,9 +84,7 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    print('Get Started tapped!');
-                  },
+                  onPressed: () => context.go('/select-role'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow, 
                     elevation: 0,
