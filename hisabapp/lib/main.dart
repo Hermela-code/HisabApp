@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hisabapp/features/cashier/staff_performance.dart';
+import 'package:hisabapp/features/cashier/cashier_dashboard.dart';
 
 void main() {
   runApp(const HisabApp());
@@ -17,7 +17,7 @@ class HisabApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter',
       ),
-      home: const StaffPerformance(),
+      home: const CashierDashboard(),
     );
   }
 }

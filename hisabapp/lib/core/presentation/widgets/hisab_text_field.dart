@@ -8,9 +8,9 @@ class HisabTextField extends StatelessWidget {
   final bool isPassword;
   final String? Function(String?)? validator;
   final IconData? prefixIcon;
-  final Widget? suffixIcon; // Added for password toggles or clear buttons
-  final Function(String)? onChanged; // Added to sync with BLoC events
-  final bool readOnly; // Added for fields that shouldn't be edited
+  final Widget? suffixIcon;
+  final Function(String)? onChanged;
+  final bool readOnly;
 
   const HisabTextField({
     super.key,
@@ -42,7 +42,6 @@ class HisabTextField extends StatelessWidget {
           hintText: hint,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           suffixIcon: suffixIcon,
-          // Using a consistent border style for the whole app
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
