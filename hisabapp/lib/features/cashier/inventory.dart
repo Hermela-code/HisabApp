@@ -23,14 +23,11 @@ class Inventory extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Add Product Button
             SizedBox(
               width: 170,
               height: 45,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // Connect to BLoC to open "Add Product" flow
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF2A007),
                   foregroundColor: Colors.black,
@@ -46,7 +43,6 @@ class Inventory extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Search Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
@@ -64,7 +60,6 @@ class Inventory extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Product List
             _buildProductCard(
               name: "Camon-20",
               category: "Electronics",
@@ -149,7 +144,7 @@ class Inventory extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D1B2A), // Dark Navy button
+                    backgroundColor: const Color(0xFF0D1B2A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
