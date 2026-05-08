@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-// Updated import path: point directly to the file containing DeleteProductView
-import 'package:hisabapp/core/presentation/widgets/modals/report.dart';
+import 'package:hisabapp/features/cashier/cashier_dashboard.dart';
 
 void main() {
   runApp(const HisabApp());
@@ -15,16 +14,10 @@ class HisabApp extends StatelessWidget {
       title: 'HisabApp',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
         fontFamily: 'Inter',
       ),
-      home: const Scaffold(
-        backgroundColor: Colors.white12,
-        body: Center(
-          // Removed the invalid 'const' keyword
-          child: DailyReportModal(), 
-        ),
-      ),
+      home: const CashierDashboard(),
     );
   }
 }
