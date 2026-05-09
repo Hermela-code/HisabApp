@@ -312,10 +312,7 @@ class _GoroDetailPageState extends State<GoroDetailPage> {
         Align(
           alignment: Alignment.centerRight,
           child: ElevatedButton.icon(
-            onPressed: () => _showBlurModal(context, Dialog(
-              backgroundColor: Colors.transparent,
-              child: const AddBranchCostModal(),
-            )),
+            onPressed: () => _showBlurModal(context, const AddBranchCostModal()),
             icon: const Icon(Icons.add, size: 18, color: Colors.black),
             label: const Text('Add Cost', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
             style: ElevatedButton.styleFrom(

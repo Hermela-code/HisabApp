@@ -27,53 +27,52 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset('assets/images/logo1.jpg', height: 100, fit: BoxFit.contain),
-              const SizedBox(height: 20),
-              const Text('Log in', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black)),
-              const SizedBox(height: 8),
+              Image.asset('assets/images/logo1.jpg', height: 70, fit: BoxFit.contain),
+              const SizedBox(height: 12),
+              const Text('Log in', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              const SizedBox(height: 6),
               const Text(
-                'Enter your detail to get started\nwith HisabApp',
+                'Enter your detail to get started with HisabApp',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: Colors.grey),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               _buildInputField(label: 'User Name', controller: _userNameController),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               _buildInputField(label: 'Password', controller: _passwordController, isPassword: true),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
 
-              // Role selector
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Role', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                  const SizedBox(height: 8),
+                  const Text('Role', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     value: _selectedRole,
-                    hint: const Text('Select your role'),
+                    hint: const Text('Select your role', style: TextStyle(fontSize: 13)),
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.orange, width: 2)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.orange, width: 2)),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
-                      DropdownMenuItem(value: 'owner', child: Text('Owner')),
+                      DropdownMenuItem(value: 'cashier', child: Text('Cashier', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'owner', child: Text('Owner', style: TextStyle(fontSize: 13))),
                     ],
                     onChanged: (value) => setState(() => _selectedRole = value),
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 44,
                 child: ElevatedButton(
                   onPressed: _selectedRole == null ? null : _onLogin,
                   style: ElevatedButton.styleFrom(
@@ -82,18 +81,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text('Login', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 16),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? ", style: TextStyle(color: Colors.black87)),
+                  const Text("Don't have an account? ", style: TextStyle(fontSize: 13, color: Colors.black87)),
                   GestureDetector(
                     onTap: () => context.go('/select-role'),
-                    child: const Text('Sign up', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                    child: const Text('Sign up', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
                 ],
               ),
@@ -108,15 +107,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           obscureText: isPassword,
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.orange, width: 2)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.orange, width: 2)),
           ),
         ),
       ],

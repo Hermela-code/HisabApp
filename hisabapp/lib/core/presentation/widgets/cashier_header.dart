@@ -136,6 +136,7 @@ class CashierLayout extends StatelessWidget {
     return Scaffold(
       appBar: const HisabHeader(),
       drawer: const CashierSidebar(),
+      backgroundColor: Colors.white,
       body: body,
     );
   }

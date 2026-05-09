@@ -130,6 +130,7 @@ class OwnerLayout extends StatelessWidget {
     return Scaffold(
       appBar: const OwnerHeader(),
       drawer: const OwnerSidebar(),
+      backgroundColor: Colors.white,
       body: body,
     );
   }
