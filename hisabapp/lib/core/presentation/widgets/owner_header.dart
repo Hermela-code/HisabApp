@@ -85,7 +85,7 @@ class OwnerSidebar extends StatelessWidget {
 
           // SETTINGS AT BOTTOM
           const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-          _buildMenuItem(context, Icons.settings_outlined, "Settings", null),
+          _buildMenuItem(context, Icons.settings_outlined, "Settings", '/settings'),
           const SizedBox(height: 20),
         ],
       ),

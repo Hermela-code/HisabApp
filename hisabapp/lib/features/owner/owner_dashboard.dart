@@ -24,19 +24,20 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            Row(
+            GridView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.4,
+              ),
               children: [
-                Expanded(child: _buildMetricBox1()),
-                const SizedBox(width: 16),
-                Expanded(child: _buildMetricBox2()),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildMetricBox3()),
-                const SizedBox(width: 16),
-                Expanded(child: _buildMetricBox4()),
+                _buildStatTile("BRANCHES", "2", const Icon(Icons.business, color: Color(0xFF3B82F6))),
+                _buildStatTile("Total income", "\$240,000", const Icon(Icons.trending_up, color: Color(0xFF4CAF50))),
+                _buildStatTile("OP. Costes", "\$0", const Icon(Icons.money_off, color: Color(0xFFE57373))),
+                _buildStatTile("NET/EST.", "\$139,600", const Icon(Icons.account_balance_wallet, color: Color(0xFF2196F3))),
               ],
             ),
             const SizedBox(height: 32),
@@ -48,81 +49,37 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricBox1() {
-    return _metricBox(
-      label: 'BRANCHES',
-      value: '2',
-      icon: Icons.business,
-      iconBg: const Color(0xFFE6F0FF),
-      iconColor: const Color(0xFF3B82F6),
-    );
-  }
-
-  Widget _buildMetricBox2() {
-    return _metricBox(
-      label: 'Total income',
-      value: '\$240,000',
-      icon: Icons.trending_up,
-      iconBg: Color(0x1A4CAF50),
-      iconColor: Colors.green,
-    );
-  }
-
-  Widget _buildMetricBox3() {
+  Widget _buildStatTile(String label, String value, Widget icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _cardDecoration(),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('OP. Costes', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF9CA3AF))),
-          SizedBox(height: 8),
-          Text('\$0', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricBox4() {
-    return _metricBox(
-      label: 'NET/EST.',
-      value: '\$139,600',
-      icon: Icons.trending_up,
-      iconBg: Color(0x1A2196F3),
-      iconColor: Colors.blue,
-    );
-  }
-
-  Widget _metricBox({required String label, required String value, required IconData icon, required Color iconBg, required Color iconColor}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _cardDecoration(),
-      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF9CA3AF))),
-              const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ),
+              icon,
             ],
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: iconColor, size: 32),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
-    );
-  }
-
-  BoxDecoration _cardDecoration() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
     );
   }
 

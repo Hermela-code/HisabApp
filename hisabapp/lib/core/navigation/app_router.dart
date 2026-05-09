@@ -18,6 +18,7 @@ import '../../features/owner/owner_record_sale.dart';
 import '../../features/owner/branches.dart';
 import '../../features/owner/export_archive.dart';
 import '../../features/widgets/modals/report.dart';
+import '../../features/settings/settings_page.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -39,6 +40,7 @@ class AppRouter {
   static const String ownerBranches = '/owner-branches';
   static const String ownerExports = '/owner-exports';
   static const String ownerReport = '/owner-report';
+  static const String settings = '/settings';
 
   static final GoRouter router = GoRouter(
     initialLocation: landing,
@@ -118,6 +120,10 @@ class AppRouter {
       GoRoute(
         path: ownerReport,
         builder: (context, state) => const ReportPage(),
+      ),
+      GoRoute(
+        path: settings,
+        builder: (context, state) => const SettingsPage(),
       ),
     ],
   );

@@ -12,8 +12,7 @@ class WelcomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Top spacing
-            const SizedBox(height: 40),
+            const SizedBox(height: 80),
             
             // --- Logo Image Section ---
             Center(
@@ -79,7 +78,7 @@ class WelcomeScreen extends StatelessWidget {
             
             // --- Action Button ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 140, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -104,7 +103,6 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: 20),
           ],
         ),
       ),
