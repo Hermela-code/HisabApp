@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/widgets/owner_header.dart';
+import 'package:hisabapp/core/presentation/widgets/modals/add_branch.dart';
 
 class BranchPage extends StatelessWidget {
   const BranchPage({super.key});
+
+  void _showAddBranchModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (_) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: const AddBranchView(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +35,7 @@ class BranchPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () => _showAddBranchModal(context),
               icon: const Icon(Icons.add, size: 18, color: Colors.black),
               label: const Text('Add Branch', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
               style: ElevatedButton.styleFrom(
@@ -77,7 +91,7 @@ class BranchPage extends StatelessWidget {
           const SizedBox(height: 24),
           Center(
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () => context.go('/owner-exports'),
               icon: const Icon(Icons.file_upload, size: 18, color: Colors.black),
               label: const Text('Export today', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
               style: ElevatedButton.styleFrom(

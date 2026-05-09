@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddBranchView extends StatefulWidget {
@@ -86,7 +87,8 @@ class _AddBranchViewState extends State<AddBranchView> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Add branch submission logic
+                    Navigator.of(context).pop();
+                    context.go('/owner-branches');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
@@ -110,7 +112,10 @@ class _AddBranchViewState extends State<AddBranchView> {
                 width: double.infinity,
                 height: 42,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/owner-branches');
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(
