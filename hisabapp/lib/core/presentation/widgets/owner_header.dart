@@ -97,7 +97,7 @@ class OwnerSidebar extends StatelessWidget {
       leading: Icon(icon, color: Colors.white, size: 22),
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
       onTap: route == null ? null : () {
-        Navigator.pop(context);
+        context.pop();
         context.go(route);
       },
     );

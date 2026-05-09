@@ -49,7 +49,7 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                   const Text('Add Branch Cost', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textMain)),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                 ],
               ),
@@ -67,7 +67,7 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,
@@ -81,7 +81,7 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                 width: double.infinity,
                 height: 42,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

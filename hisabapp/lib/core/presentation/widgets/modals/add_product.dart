@@ -69,7 +69,7 @@ class _AddProductViewState extends State<AddProductView> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                 ],
               ),
@@ -169,7 +169,7 @@ class _AddProductViewState extends State<AddProductView> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,
@@ -191,7 +191,7 @@ class _AddProductViewState extends State<AddProductView> {
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(

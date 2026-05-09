@@ -47,7 +47,7 @@ class _UpdateProductViewState extends State<UpdateProductView> {
                 children: [
                   const SizedBox(width: 24),
                   const Text('Update Product', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textMain)),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => context.pop()),
                 ],
               ),
               const SizedBox(height: 15),
@@ -107,7 +107,7 @@ class _UpdateProductViewState extends State<UpdateProductView> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,
@@ -121,7 +121,7 @@ class _UpdateProductViewState extends State<UpdateProductView> {
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

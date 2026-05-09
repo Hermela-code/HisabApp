@@ -47,7 +47,7 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                 ],
               ),
@@ -81,7 +81,7 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    context.pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE53935), // Updated to avoid color lookup errors
@@ -105,7 +105,7 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 width: double.infinity,
                 height: 42,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(

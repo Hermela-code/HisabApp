@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 class DailyReportModal extends StatelessWidget {
   const DailyReportModal({super.key});
 
@@ -42,7 +42,7 @@ class DailyReportModal extends StatelessWidget {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           child: const Icon(Icons.close, size: 20),
                         ),
                       ],

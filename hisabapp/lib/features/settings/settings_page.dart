@@ -14,13 +14,13 @@ class SettingsPage extends StatelessWidget {
             'Are you sure you want to delete your account? This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text('Cancel', style: TextStyle(color: AppColors.textMain)),
           ),
           ElevatedButton(
             onPressed: () {
               // Dismiss the dialog
-              Navigator.of(context).pop();
+              context.pop();
               // Navigate to landing page (simulating account deletion)
               context.go('/');
             },
