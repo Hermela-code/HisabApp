@@ -98,7 +98,7 @@ class _AddBranchViewState extends State<AddBranchView> {
                     ),
                   ),
                   child: const Text(
-                    'Add cost', // Matches the button label in the layout
+                    'Add Branch', // Matches the button label in the layout
                     style: TextStyle(
                       color: AppColors.textMain,
                       fontSize: 14,

@@ -112,7 +112,7 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Add Branch', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Add Branch cost', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 12),
