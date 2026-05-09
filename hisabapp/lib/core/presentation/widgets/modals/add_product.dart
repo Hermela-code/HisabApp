@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddProductView extends StatefulWidget {
@@ -169,7 +170,8 @@ class _AddProductViewState extends State<AddProductView> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Submit logic
+                    Navigator.of(context).pop();
+                    context.go('/cashier-inventory');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,

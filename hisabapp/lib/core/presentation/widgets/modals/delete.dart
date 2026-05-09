@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class DeleteProductView extends StatefulWidget {
@@ -80,7 +81,8 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Delete submission logic
+                    Navigator.of(context).pop();
+                    context.go('/cashier-inventory');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE53935), // Updated to avoid color lookup errors

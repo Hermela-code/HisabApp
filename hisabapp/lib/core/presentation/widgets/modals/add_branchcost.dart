@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddBranchCostModal extends StatefulWidget {
@@ -66,7 +67,10 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.go('/cashier-branch-cost');
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,

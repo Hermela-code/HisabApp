@@ -10,38 +10,21 @@ class HisabHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 0,
+      elevation: 1,
+      shadowColor: Colors.black.withOpacity(0.15),
+      scrolledUnderElevation: 1,
+      surfaceTintColor: Colors.white,
       leading: IconButton(
-        icon: const Icon(
-          Icons.menu,
-          color: AppColors.textMain,
-          size: 30,
-        ),
-        onPressed: () {
-          // Links the header button to the sidebar
-          Scaffold.of(context).openDrawer();
-        },
+        icon: const Icon(Icons.menu, color: AppColors.textMain, size: 30),
+        onPressed: () => Scaffold.of(context).openDrawer(),
       ),
       titleSpacing: 0,
       title: Row(
         children: [
-          Image.asset(
-            'assets/images/logo1.jpg',
-            height: 40,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.shopping_cart, color: Colors.orange);
-            },
-          ),
+          Image.asset('assets/images/logo1.jpg', height: 40, fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => const Icon(Icons.shopping_cart, color: Colors.orange)),
           const SizedBox(width: 8),
-          const Text(
-            'HisabApp',
-            style: TextStyle(
-              color: AppColors.textMain,
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          const Text('HisabApp', style: TextStyle(color: AppColors.textMain, fontSize: 24, fontWeight: FontWeight.w500)),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../core/presentation/widgets/cashier_header.dart';
 import '../../core/presentation/widgets/modals/add_branchcost.dart';
+import '../../core/presentation/widgets/modals/delete.dart';
 
 class BranchCost extends StatelessWidget {
   const BranchCost({super.key});
@@ -12,11 +13,18 @@ class BranchCost extends StatelessWidget {
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (_) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-        child: const Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.symmetric(horizontal: 24),
-          child: AddBranchCostModal(),
-        ),
+        child: const AddBranchCostModal(),
+      ),
+    );
+  }
+
+  void _showDeleteModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (_) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: const DeleteProductView(),
       ),
     );
   }
@@ -114,9 +122,9 @@ class BranchCost extends StatelessWidget {
             const SizedBox(height: 32),
 
             // List of Cost Items (Represents the "Read" part of CRUD)
-            _buildCostItem("Transport", "2026-04-08", "\$200"),
+            _buildCostItem(context, "Transport", "2026-04-08", "\$200"),
             const SizedBox(height: 16),
-            _buildCostItem("Copy", "2026-04-08", "\$300"),
+            _buildCostItem(context, "Copy", "2026-04-08", "\$300"),
           ],
         ),
       ),
@@ -124,7 +132,7 @@ class BranchCost extends StatelessWidget {
   }
 
   // Helper for the cost items to match photo_2_2026-04-27_12-57-04_2.jpg
-  Widget _buildCostItem(String title, String date, String amount) {
+  Widget _buildCostItem(BuildContext context, String title, String date, String amount) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -159,9 +167,7 @@ class BranchCost extends StatelessWidget {
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
-                onPressed: () {
-                  // Hook for the "Delete" requirement of CRUD[cite: 1]
-                },
+                onPressed: () => _showDeleteModal(context),
               ),
             ],
           ),

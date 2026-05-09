@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddStaffView extends StatefulWidget {
@@ -81,7 +82,8 @@ class _AddStaffViewState extends State<AddStaffView> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Add staff submission logic
+                    Navigator.of(context).pop();
+                    context.go('/cashier-staff');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
