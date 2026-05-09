@@ -13,6 +13,7 @@ import '../../features/cashier/branch_cost.dart';
 import '../../features/cashier/export_archive.dart';
 import '../../features/cashier/staff_performance.dart';
 import '../../features/owner/owner_dashboard.dart';
+import '../../features/owner/branch_detail.dart';
 import '../../features/owner/branches.dart';
 import '../../features/owner/export_archive.dart';
 
@@ -31,6 +32,7 @@ class AppRouter {
   static const String cashierExportArchive = '/cashier-export-archive';
   static const String cashierStaff = '/cashier-staff';
   static const String ownerDashboard = '/owner-dashboard';
+  static const String branchDetail = '/branch-detail';
   static const String ownerBranches = '/owner-branches';
   static const String ownerExports = '/owner-exports';
 
@@ -92,6 +94,10 @@ class AppRouter {
       GoRoute(
         path: ownerDashboard,
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: branchDetail,
+        builder: (context, state) => const GoroDetailPage(),
       ),
       GoRoute(
         path: ownerBranches,

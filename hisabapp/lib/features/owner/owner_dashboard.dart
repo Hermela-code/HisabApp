@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/widgets/owner_header.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -40,7 +41,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            _buildBranchesSection(),
+            _buildBranchesSection(context),
           ],
         ),
       ),
@@ -125,7 +126,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBranchesSection() {
+  Widget _buildBranchesSection(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -139,17 +140,19 @@ class DashboardScreen extends StatelessWidget {
             padding: EdgeInsets.all(20),
             child: Text('Branches', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
           ),
-          _buildBranchItem(Icons.business, 'GORO', 'GORO, Addis Ababa'),
+          _buildBranchItem(context, Icons.business, 'GORO', 'GORO, Addis Ababa'),
           const SizedBox(height: 8),
-          _buildBranchItem(Icons.business, 'CBE', 'Stadium, Addis Ababa'),
+          _buildBranchItem(context, Icons.business, 'CBE', 'Stadium, Addis Ababa'),
           const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _buildBranchItem(IconData icon, String title, String subtitle) {
-    return Container(
+  Widget _buildBranchItem(BuildContext context, IconData icon, String title, String subtitle) {
+    return GestureDetector(
+      onTap: () => context.go('/branch-detail'),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(color: const Color(0xFFF5F3FF), borderRadius: BorderRadius.circular(12)),
@@ -174,6 +177,6 @@ class DashboardScreen extends StatelessWidget {
           const Text('→', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
         ],
       ),
-    );
+    ));
   }
 }
