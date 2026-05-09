@@ -14,8 +14,10 @@ import '../../features/cashier/export_archive.dart';
 import '../../features/cashier/staff_performance.dart';
 import '../../features/owner/owner_dashboard.dart';
 import '../../features/owner/branch_detail.dart';
+import '../../features/owner/owner_record_sale.dart';
 import '../../features/owner/branches.dart';
 import '../../features/owner/export_archive.dart';
+import '../../features/widgets/modals/report.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -33,8 +35,10 @@ class AppRouter {
   static const String cashierStaff = '/cashier-staff';
   static const String ownerDashboard = '/owner-dashboard';
   static const String branchDetail = '/branch-detail';
+  static const String ownerRecordSale = '/owner-record-sale';
   static const String ownerBranches = '/owner-branches';
   static const String ownerExports = '/owner-exports';
+  static const String ownerReport = '/owner-report';
 
   static final GoRouter router = GoRouter(
     initialLocation: landing,
@@ -100,12 +104,20 @@ class AppRouter {
         builder: (context, state) => const GoroDetailPage(),
       ),
       GoRoute(
+        path: ownerRecordSale,
+        builder: (context, state) => const OwnerRecordSalePage(),
+      ),
+      GoRoute(
         path: ownerBranches,
         builder: (context, state) => const BranchPage(),
       ),
       GoRoute(
         path: ownerExports,
         builder: (context, state) => const ExportArchivePage(),
+      ),
+      GoRoute(
+        path: ownerReport,
+        builder: (context, state) => const ReportPage(),
       ),
     ],
   );

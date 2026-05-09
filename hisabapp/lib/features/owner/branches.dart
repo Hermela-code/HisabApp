@@ -91,16 +91,16 @@ class BranchPage extends StatelessWidget {
               ]),
             ),
             const SizedBox(height: 24),
-            Center(
+            SizedBox(
+              width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => context.go('/owner-exports'),
                 icon: const Icon(Icons.file_upload, size: 18, color: Colors.black),
                 label: const Text('Export today', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber[700],
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  minimumSize: const Size(200, 0),
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/widgets/owner_header.dart';
 
 class ExportArchivePage extends StatefulWidget {
@@ -98,7 +99,10 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
                   : ListView.separated(
                       itemCount: _filteredReports.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (_, i) => _buildReportBox(_filteredReports[i]),
+                      itemBuilder: (context, i) => GestureDetector(
+                        onTap: () => context.go('/owner-report'),
+                        child: _buildReportBox(_filteredReports[i]),
+                      ),
                     ),
             ),
           ],
