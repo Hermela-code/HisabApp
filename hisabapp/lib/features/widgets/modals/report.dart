@@ -17,7 +17,13 @@ class ReportPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.close, size: 24),
-            onPressed: () => context.go('/owner-exports'),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner-exports');
+              }
+            },
           ),
         ],
       ),

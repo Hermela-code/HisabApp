@@ -82,7 +82,6 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/cashier-inventory');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE53935), // Updated to avoid color lookup errors

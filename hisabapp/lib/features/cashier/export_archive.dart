@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/widgets/cashier_header.dart';
 
 class ExportArchive extends StatelessWidget {
@@ -67,6 +68,7 @@ class ExportArchive extends StatelessWidget {
 
             // Archive List
             _buildArchiveCard(
+              context,
               date: "2026-04-08",
               amount: "\$90,000",
               units: "3 units . 2 products",
@@ -76,6 +78,7 @@ class ExportArchive extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildArchiveCard(
+              context,
               date: "2026-04-08",
               amount: "\$60,000",
               units: "3 units . 1 products",
@@ -89,7 +92,8 @@ class ExportArchive extends StatelessWidget {
     );
   }
 
-  Widget _buildArchiveCard({
+  Widget _buildArchiveCard(
+    BuildContext context, {
     required String date,
     required String amount,
     required String units,
@@ -97,14 +101,16 @@ class ExportArchive extends StatelessWidget {
     required String status,
     required Color statusColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
+    return GestureDetector(
+      onTap: () => context.push('/owner-report'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
@@ -157,6 +163,7 @@ class ExportArchive extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

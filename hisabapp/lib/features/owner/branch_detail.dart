@@ -6,6 +6,8 @@ import 'package:hisabapp/core/presentation/widgets/modals/add_product.dart';
 import 'package:hisabapp/core/presentation/widgets/modals/add_branchcost.dart';
 import 'package:hisabapp/core/presentation/widgets/modals/add_staff.dart';
 import 'package:hisabapp/core/presentation/widgets/modals/add_stock.dart';
+import 'package:hisabapp/core/presentation/widgets/modals/update_product.dart';
+import 'package:hisabapp/core/presentation/widgets/modals/delete.dart';
 
 class GoroDetailPage extends StatefulWidget {
   const GoroDetailPage({super.key});
@@ -216,14 +218,14 @@ class _GoroDetailPageState extends State<GoroDetailPage> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => _showBlurModal(context, const UpdateProductView()),
                       icon: Icon(Icons.edit_outlined, size: 18, color: Colors.grey.shade600),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => _showBlurModal(context, const DeleteProductView()),
                       icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade300),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -402,7 +404,7 @@ class _GoroDetailPageState extends State<GoroDetailPage> {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () => _showBlurModal(context, const DeleteProductView()),
                 icon: Icon(Icons.delete_outline, color: Colors.red.shade300, size: 20),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),

@@ -86,10 +86,7 @@ class _AddBranchViewState extends State<AddBranchView> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.go('/owner-branches');
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,
@@ -112,10 +109,7 @@ class _AddBranchViewState extends State<AddBranchView> {
                 width: double.infinity,
                 height: 42,
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.go('/owner-branches');
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.textGray),
                     shape: RoundedRectangleBorder(
