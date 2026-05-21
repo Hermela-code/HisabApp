@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'dart:io';
 
 class SqliteService {
   static final SqliteService _instance = SqliteService._internal();
@@ -32,6 +31,14 @@ class SqliteService {
         role TEXT,
         company_id INTEGER,
         branch_id INTEGER
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE businesses (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        type TEXT
       )
     ''');
 

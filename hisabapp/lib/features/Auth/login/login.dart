@@ -17,14 +17,29 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _selectedRole;
 
   Future<void> _onLogin() async {
+    FocusScope.of(context).unfocus();
     final username = _userNameController.text.trim();
     final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both username and password.')),
+      );
+      return;
+    }
+
+    if (_selectedRole == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your role before login.')),
+      );
+      return;
+    }
 
     final user = await loginUserUseCase.execute(username, password);
     if (!mounted) return;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid username or password')),
+        const SnackBar(content: Text('Invalid username or password.')),
       );
       return;
     }
@@ -90,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: _selectedRole == null ? null : _onLogin,
+                  onPressed: _onLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF39C12),
                     foregroundColor: Colors.black,
@@ -137,5 +152,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _userNameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

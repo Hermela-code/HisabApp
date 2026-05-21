@@ -18,13 +18,21 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   Future<void> _onCreateAccount() async {
+    FocusScope.of(context).unfocus();
     final username = _nameController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword) {
+    if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields and ensure passwords match')),
+        const SnackBar(content: Text('Please fill in all required fields.')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
       );
       return;
     }
@@ -38,13 +46,24 @@ class _SignupScreenState extends State<SignupScreen> {
       branchId: null,
     );
 
-    await registerUserUseCase.execute(user);
-    if (!mounted) return;
+    try {
+      await registerUserUseCase.execute(user);
+      if (!mounted) return;
 
-    if (widget.role == 'cashier') {
-      context.go('/cashier-dashboard');
-    } else {
-      context.go('/owner-dashboard');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created successfully.')),
+      );
+
+      if (widget.role == 'cashier') {
+        context.go('/cashier-dashboard');
+      } else {
+        context.go('/owner-dashboard');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create account: $error')),
+      );
     }
   }
 
@@ -128,5 +147,13 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }
