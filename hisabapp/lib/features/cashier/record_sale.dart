@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/presentation/widgets/cashier_header.dart';
+import '../../application/di.dart';
+import '../../domain/entities/sale.dart';
 
 class RecordSalePage extends StatefulWidget {
   const RecordSalePage({super.key});
@@ -481,7 +483,7 @@ class _RecordSalePageState extends State<RecordSalePage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (selectedElectronicsType == null ||
                       selectedProductName == null ||
                       selectedModel == null ||
@@ -493,6 +495,21 @@ class _RecordSalePageState extends State<RecordSalePage> {
                       const SnackBar(content: Text('Please fill all required fields')),
                     );
                   } else {
+                    final quantity = int.tryParse(quantityController.text) ?? 0;
+                    final unitPrice = int.tryParse(unitPriceController.text) ?? 0;
+                    final sale = Sale(
+                      id: DateTime.now().microsecondsSinceEpoch,
+                      productId: 0,
+                      productName: selectedProductName!,
+                      salesperson: selectedSalesperson!,
+                      quantity: quantity,
+                      unitPrice: unitPrice,
+                      total: quantity * unitPrice,
+                      createdAt: DateTime.now(),
+                      branchId: 0,
+                    );
+                    await recordSaleUseCase.execute(sale);
+                    if (!mounted) return;
                     context.go('/cashier-daily-sales');
                   }
                 },

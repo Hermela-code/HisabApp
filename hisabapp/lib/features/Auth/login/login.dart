@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../application/di.dart';
+import '../../../domain/entities/user.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,8 +16,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   String? _selectedRole;
 
-  void _onLogin() {
-    if (_selectedRole == 'cashier') {
+  Future<void> _onLogin() async {
+    final username = _userNameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    final user = await loginUserUseCase.execute(username, password);
+    if (!mounted) return;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid username or password')),
+      );
+      return;
+    }
+
+    if (user.role == UserRole.cashier) {
       context.go('/cashier-dashboard');
     } else {
       context.go('/owner-dashboard');
@@ -54,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text('Role', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    value: _selectedRole,
+                    initialValue: _selectedRole,
                     hint: const Text('Select your role', style: TextStyle(fontSize: 13)),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

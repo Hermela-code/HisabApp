@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../application/di.dart';
+import '../../../domain/entities/user.dart';
+
 class SignupScreen extends StatefulWidget {
   final String role;
   const SignupScreen({super.key, required this.role});
@@ -14,7 +17,30 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  void _onCreateAccount() {
+  Future<void> _onCreateAccount() async {
+    final username = _nameController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields and ensure passwords match')),
+      );
+      return;
+    }
+
+    final user = User(
+      id: DateTime.now().millisecondsSinceEpoch,
+      username: username,
+      password: password,
+      role: widget.role == 'cashier' ? UserRole.cashier : UserRole.owner,
+      companyId: 1,
+      branchId: null,
+    );
+
+    await registerUserUseCase.execute(user);
+    if (!mounted) return;
+
     if (widget.role == 'cashier') {
       context.go('/cashier-dashboard');
     } else {
