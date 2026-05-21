@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddStaffView extends StatefulWidget {
-  const AddStaffView({super.key});
+  final void Function(String name, String phoneNumber) onAddStaff;
+  const AddStaffView({super.key, required this.onAddStaff});
 
   @override
   State<AddStaffView> createState() => _AddStaffViewState();
@@ -81,7 +82,13 @@ class _AddStaffViewState extends State<AddStaffView> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    widget.onAddStaff(
+                      _nameController.text.trim(),
+                      _phoneController.text.trim(),
+                    );
+                    context.pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,

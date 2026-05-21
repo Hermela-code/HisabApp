@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddBranchView extends StatefulWidget {
-  const AddBranchView({super.key});
+  final void Function(String branchName, String location, String cashierName) onAddBranch;
+  const AddBranchView({super.key, required this.onAddBranch});
 
   @override
   State<AddBranchView> createState() => _AddBranchViewState();
@@ -86,7 +87,14 @@ class _AddBranchViewState extends State<AddBranchView> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    widget.onAddBranch(
+                      _branchNameController.text.trim(),
+                      _locationController.text.trim(),
+                      _cashierNameController.text.trim(),
+                    );
+                    context.pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,

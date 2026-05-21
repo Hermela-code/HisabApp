@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddBranchCostModal extends StatefulWidget {
-  const AddBranchCostModal({super.key});
+  final void Function(String description, int amount) onAddCost;
+  const AddBranchCostModal({super.key, required this.onAddCost});
 
   @override
   State<AddBranchCostModal> createState() => _AddBranchCostModalState();
@@ -67,7 +68,13 @@ class _AddBranchCostModalState extends State<AddBranchCostModal> {
                 width: double.infinity,
                 height: 42,
                 child: ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    widget.onAddCost(
+                      _descriptionController.text.trim(),
+                      int.tryParse(_amountController.text) ?? 0,
+                    );
+                    context.pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,
