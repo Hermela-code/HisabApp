@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddStockScreen extends StatefulWidget {
-  final void Function(int unitsToAdd, int? newSellingPrice, int? newCostPrice) onAddStock;
-  const AddStockScreen({super.key, required this.onAddStock});
+  final void Function(int unitsToAdd, int? newSellingPrice, int? newCostPrice)? onAddStock;
+  const AddStockScreen({super.key, this.onAddStock});
 
   @override
   State<AddStockScreen> createState() => _AddStockScreenState();
@@ -78,7 +78,7 @@ class _AddStockScreenState extends State<AddStockScreen> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
-                    widget.onAddStock(
+                    widget.onAddStock?.call(
                       int.tryParse(_unitsController.text) ?? 0,
                       int.tryParse(_sellingPriceController.text),
                       int.tryParse(_costPriceController.text),

@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddProductView extends StatefulWidget {
-  final void Function(String name, String model, String specification, int sellingPrice, int costPrice, int totalStock, int remainingStock) onAddProduct;
-  const AddProductView({super.key, required this.onAddProduct});
+  final void Function(String name, String model, String specification, int sellingPrice, int costPrice, int totalStock, int remainingStock)? onAddProduct;
+  const AddProductView({super.key, this.onAddProduct});
 
   @override
   State<AddProductView> createState() => _AddProductViewState();
@@ -171,7 +171,7 @@ class _AddProductViewState extends State<AddProductView> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    widget.onAddProduct(
+                    widget.onAddProduct?.call(
                       _nameController.text.trim(),
                       _modelController.text.trim(),
                       _specController.text.trim(),

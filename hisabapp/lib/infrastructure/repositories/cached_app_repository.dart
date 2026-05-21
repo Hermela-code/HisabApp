@@ -61,6 +61,15 @@ class CachedAppRepository implements AppRepository {
     await db.insert('users', {'id': user.id, 'username': user.username, 'password': user.password, 'role': user.role == UserRole.cashier ? 'cashier' : 'owner', 'company_id': user.companyId, 'branch_id': user.branchId});
   }
 
+  @override
+  Future<void> registerBusiness(String businessName, String businessType) async {
+    try {
+      await _api.post('/register-business', {'name': businessName, 'type': businessType});
+    } catch (_) {
+      // ignore
+    }
+  }
+
   // --- Branches ---
   @override
   Future<void> addBranch(Branch branch) async {
