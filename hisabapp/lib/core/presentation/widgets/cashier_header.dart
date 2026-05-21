@@ -83,7 +83,7 @@ class CashierSidebar extends StatelessWidget {
                 _buildMenuItem(context, Icons.monetization_on_outlined, "Branch Costs", '/cashier-branch-cost'),
                 _buildMenuItem(context, Icons.ios_share_outlined, "Export / Archive", '/cashier-export-archive'),
                 _buildMenuItem(context, Icons.people_outline, "Staff", '/cashier-staff'),
-                _buildMenuItem(context, Icons.logout, "Logout", '/select-role'),
+                _buildMenuItem(context, Icons.logout, "Logout", '/login'),
               ],
             ),
           ),

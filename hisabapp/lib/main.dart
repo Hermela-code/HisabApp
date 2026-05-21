@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'core/navigation/app_router.dart';
+import 'core/platform/path_provider_registrar.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  registerDesktopPathProvider();
   runApp(const MyApp());
 }
 

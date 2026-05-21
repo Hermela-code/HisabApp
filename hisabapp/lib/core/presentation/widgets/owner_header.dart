@@ -78,7 +78,7 @@ class OwnerSidebar extends StatelessWidget {
                 _buildMenuItem(context, Icons.grid_view, "Dashboard", '/owner-dashboard'),
                 _buildMenuItem(context, Icons.business_outlined, "Branches", '/owner-branches'),
                 _buildMenuItem(context, Icons.ios_share_outlined, "Exports", '/owner-exports'),
-                _buildMenuItem(context, Icons.logout, "Logout", '/select-role'),
+                _buildMenuItem(context, Icons.logout, "Logout", '/login'),
               ],
             ),
           ),
