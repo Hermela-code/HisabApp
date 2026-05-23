@@ -99,6 +99,7 @@ The application utilizes the `GoRouter` package for all navigation logic. This d
 
 The project follows a clean, decoupled architecture to separate the frontend, backend, and core logic:
 
+```
 HisabApp/ (Root)
 ├── hisab_server/         # Backend: Node.js/PHP API services
 ├── hisabapp/             # Frontend: Flutter mobile & web application
@@ -107,55 +108,54 @@ HisabApp/ (Root)
 │   ├── assets/           # Application images and branding
 │   ├── lib/              # Main Dart source code
 │   │   ├── application/  # Application layer (DI, providers, use cases)
-│   │   │   ├── di.dart                              # Dependency injection setup
-│   │   │   ├── providers/                           # Riverpod state providers
-│   │   │   ├── use_cases/                           # Business logic operations
-│   │   │   ├── models/                              # API/DTOs and mappers
-│   │   │   ├── app_repository_factory.dart          # Factory pattern for repositories
-│   │   │   ├── app_repository_factory_io.dart       # Platform-specific (iOS/Android)
-│   │   │   ├── app_repository_factory_web.dart      # Web platform implementation
-│   │   │   └── app_repository_factory_stub.dart     # Stub for testing
+│   │   │   ├── di.dart
+│   │   │   ├── providers/
+│   │   │   ├── use_cases/
+│   │   │   ├── models/
+│   │   │   ├── app_repository_factory.dart
+│   │   │   ├── app_repository_factory_io.dart
+│   │   │   ├── app_repository_factory_web.dart
+│   │   │   └── app_repository_factory_stub.dart
 │   │   │
 │   │   ├── core/         # Shared logic, navigation, utilities
 │   │   │   ├── navigation/
-│   │   │   │   └── app_router.dart                  # GoRouter configuration & routes
-│   │   │   ├── constants/                           # App-wide constants and configs
+│   │   │   │   └── app_router.dart
+│   │   │   ├── constants/
 │   │   │   ├── platform/
-│   │   │   │   ├── sqlite_initializer_web.dart      # SQLite web initialization
-│   │   │   │   └── sqlite_initializer_io.dart       # SQLite mobile initialization
-│   │   │   ├── error/                               # Error handling & exceptions
-│   │   │   ├── presentation/                        # Reusable UI components
-│   │   │   └── util/                                # Helper functions & utilities
+│   │   │   │   ├── sqlite_initializer_web.dart
+│   │   │   │   └── sqlite_initializer_io.dart
+│   │   │   ├── error/
+│   │   │   ├── presentation/
+│   │   │   └── util/
 │   │   │
 │   │   ├── domain/       # Business logic entities & interfaces
-│   │   │   ├── entities/                            # Core business objects (User, Branch, Product)
-│   │   │   └── repositories/                        # Abstract repository interfaces
+│   │   │   ├── entities/
+│   │   │   └── repositories/
 │   │   │
 │   │   ├── features/     # Feature-specific UI & presentation
 │   │   │   ├── Auth/
 │   │   │   │   ├── login/
 │   │   │   │   └── signup/
-│   │   │   ├── Landing_page/                        # Initial role selection screen
-│   │   │   ├── cashier/                             # Cashier-specific screens
-
-│   │   │   ├── owner/                               # Owner-specific screens
-│   │   │   ├── settings/                            # App settings & configuration
-│   │   │   └── widgets/                             # Shared feature components
+│   │   │   ├── Landing_page/
+│   │   │   ├── cashier/
+│   │   │   ├── owner/
+│   │   │   ├── settings/
+│   │   │   └── widgets/
 │   │   │
 │   │   ├── infrastructure/  # Data sources & repository implementations
 │   │   │   ├── local/
-│   │   │   │   └── sqlite_service.dart              # SQLite database service (singleton)
-│   │   │   ├── remote/                              # Remote API data sources
-│   │   │   ├── data_sources/                        # Data source interfaces & implementations
+│   │   │   │   └── sqlite_service.dart
+│   │   │   ├── remote/
+│   │   │   ├── data_sources/
 │   │   │   ├── repositories/
-│   │   │   │   ├── sqlite_app_repository.dart       # SQLite-based repository
-│   │   │   │   └── cache_first_app_repository.dart  # Cache-first strategy decorator
-│   │   │   └── repositories/
+│   │   │   │   ├── sqlite_app_repository.dart
+│   │   │   │   └── cache_first_app_repository.dart
 │   │   │
-│   │   └── main.dart     # App entry point with Riverpod setup
+│   │   └── main.dart
 │   │
-│   └── pubspec.yaml      # Project dependencies
+│   └── pubspec.yaml
 └── README.md
+```
 ## 🗄 Database Management (SQLite)
 
 HisabApp uses SQLite as its local database engine for persistent offline storage. The database is platform-independent and provides reliable data persistence across all platforms (iOS, Android, Web, Linux, macOS, Windows).
