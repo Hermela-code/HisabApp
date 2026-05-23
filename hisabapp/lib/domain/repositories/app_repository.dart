@@ -1,0 +1,32 @@
+import '../entities/branch.dart';
+import '../entities/branch_cost.dart';
+import '../entities/product.dart';
+import '../entities/report.dart';
+import '../entities/sale.dart';
+import '../entities/staff.dart';
+import '../entities/user.dart';
+
+abstract class AppRepository {
+  Future<void> registerBusiness(String businessName, String businessType);
+  Future<void> signUp(User user);
+  Future<User?> login(String username, String password);
+
+  Future<void> addBranch(Branch branch);
+  Future<List<Branch>> getBranches();
+
+  Future<void> addProduct(Product product);
+  Future<List<Product>> getProducts(int branchId);
+
+  Future<void> addStaff(Staff staff);
+  Future<List<Staff>> getStaff(int branchId);
+
+  Future<void> addBranchCost(BranchCost cost);
+  Future<List<BranchCost>> getBranchCosts(int branchId);
+
+  Future<void> recordSale(Sale sale);
+  Future<List<Sale>> getSales(int branchId);
+
+  Future<void> addReport(Report report);
+  Future<List<Report>> getReports();
+  Future<void> markReportDeposited(int reportId);
+}

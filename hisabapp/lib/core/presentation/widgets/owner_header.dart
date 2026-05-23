@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
 
 // --- 1. THE OWNER HEADER ---
@@ -9,37 +10,21 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 0,
+      elevation: 1,
+      shadowColor: Colors.black.withOpacity(0.15),
+      scrolledUnderElevation: 1,
+      surfaceTintColor: Colors.white,
       leading: IconButton(
-        icon: const Icon(
-          Icons.menu,
-          color: AppColors.textMain,
-          size: 30,
-        ),
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
-        },
+        icon: const Icon(Icons.menu, color: AppColors.textMain, size: 30),
+        onPressed: () => Scaffold.of(context).openDrawer(),
       ),
       titleSpacing: 0,
       title: Row(
         children: [
-          Image.asset(
-            'assets/images/logo1.jpg',
-            height: 40,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.shopping_cart, color: Colors.orange);
-            },
-          ),
+          Image.asset('assets/images/logo1.jpg', height: 40, fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => const Icon(Icons.shopping_cart, color: Colors.orange)),
           const SizedBox(width: 8),
-          const Text(
-            'HisabApp',
-            style: TextStyle(
-              color: AppColors.textMain,
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          const Text('HisabApp', style: TextStyle(color: AppColors.textMain, fontSize: 24, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -90,31 +75,31 @@ class OwnerSidebar extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(Icons.grid_view, "Dashboard", () {}),
-                _buildMenuItem(Icons.business_outlined, "Branches", () {}),
-                _buildMenuItem(Icons.ios_share_outlined, "Exports", () {}),
-                _buildMenuItem(Icons.logout, "Logout", () {}),
+                _buildMenuItem(context, Icons.grid_view, "Dashboard", '/owner-dashboard'),
+                _buildMenuItem(context, Icons.business_outlined, "Branches", '/owner-branches'),
+                _buildMenuItem(context, Icons.ios_share_outlined, "Exports", '/owner-exports'),
+                _buildMenuItem(context, Icons.logout, "Logout", '/login'),
               ],
             ),
           ),
 
           // SETTINGS AT BOTTOM
           const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-          _buildMenuItem(Icons.settings_outlined, "Settings", () {}),
+          _buildMenuItem(context, Icons.settings_outlined, "Settings", '/settings'),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildMenuItem(BuildContext context, IconData icon, String title, String? route) {
     return ListTile(
       leading: Icon(icon, color: Colors.white, size: 22),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
-      ),
-      onTap: onTap,
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
+      onTap: route == null ? null : () {
+        context.pop();
+        context.go(route);
+      },
     );
   }
 }
@@ -129,6 +114,7 @@ class OwnerLayout extends StatelessWidget {
     return Scaffold(
       appBar: const OwnerHeader(),
       drawer: const OwnerSidebar(),
+      backgroundColor: Colors.white,
       body: body,
     );
   }
