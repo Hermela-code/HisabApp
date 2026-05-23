@@ -259,7 +259,9 @@ HisabApp follows Domain-Driven Design (DDD) principles for a clean, maintainable
 - Contains: Screens, Widgets, UI logic
 - Dependencies: Only on Application and Domain layers
 
-### Data Flow Example: Recording a Sale
+### 📊 Data Flow Example: Recording a Sale
+
+```
 User Input (Presentation)
     ↓
 ConsumerWidget watches provider
@@ -277,6 +279,7 @@ Local Database
 Result returned through FutureProvider
     ↓
 UI Rebuilds with New Data
+```
 ## 🧪 Testing Architecture
 
 HisabApp includes comprehensive test coverage:
