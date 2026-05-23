@@ -17,13 +17,13 @@ The primary goal of HisabApp is to automate complex business calculations—such
 
 ## Team Members
 
-| Full Name | ID |
-| :--- | :--- |
-| **Abreham Yonatan** | [UGR/4463/16] |
-| **Gelila Sintayehu** | [UGR/3508/16] |
-| **Kidist Nega** | [UGR/1923/16] |
-| **Nabon Amanuel** | [UGR/7416/16] |
-| **Victory Bedru** | [UGR/4541/16] |
+| Full Name | ID | Section |
+| :--- | :--- | :--- |
+| **Abreham Yonatan** | [UGR/4463/16] | [1]|
+| **Gelila Sintayehu** | [UGR/3508/16] |[2]|
+| **Kidist Nega** | [UGR/1923/16] |[1]|
+| **Nabon Amanuel** | [UGR/7416/16] |[1]|
+| **Victory Bedru** | [UGR/4541/16] |[2]|
 
 ---
 
@@ -89,8 +89,6 @@ As a UI/UX-focused project, **HisabApp** prioritizes a clean, professional, and 
 The application utilizes the `GoRouter` package for all navigation logic. This declarative routing approach offers several advantages for our team:
 
 - **Deep Linking:** Enables direct navigation to specific screens (e.g., inventory or sales reports) via URL.
-
-- **Centralized Control:** All application routes are managed in a single file (`lib/core/navigation/app_router.dart`), preventing merge conflicts in `main.dart`.
 
 - **State-Aware Routing:** Easily handles redirects based on user authentication status or roles (Owner vs. Cashier).
 
@@ -193,14 +191,6 @@ Main tables include:
 - branch_costs - Operational costs (Rent, Salaries, Bulk purchases)
 - reports - Daily/weekly/monthly reports
 - product_attributes - Dynamic product field definitions
-
-### Database Initialization & Upgrades
-
-Platform-specific initializers handle database setup:
-- lib/core/platform/sqlite_initializer_io.dart - Mobile (iOS/Android)
-- lib/core/platform/sqlite_initializer_web.dart - Web platforms
-
-Migrations are handled in the _onUpgrade() method to safely modify schema across app versions.
 ---
 
 ## 💾 Caching Strategy (Cache-First Pattern)
@@ -314,21 +304,21 @@ flutter pub get
 flutter pub run build_runner build
 
 ### Running the App
-# Run on connected device/emulator
-flutter run
+**# Run on connected device/emulator
+**flutter run
 
-# Run on web
-flutter run -d chrome
+**# Run on web
+**flutter run -d chrome
 
-# Run on desktop (macOS)
-flutter run -d macos
+**# Run on desktop (macOS)
+**flutter run -d macos
 
-# Build production APK (Android)
-flutter build apk --release
+**# Build production APK (Android)
+**flutter build apk --release
 
-# Build iOS app
-flutter build ios --release
----
+**# Build iOS app
+****flutter build ios --release
+**---
 ## 📞 Support & Troubleshooting
 
 ### Common Issues
