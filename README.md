@@ -75,7 +75,8 @@ The primary goal of HisabApp is to automate complex business calculations—such
 3.  **Reporting:** The Cashier triggers an "Export," creating a summarized table stored in their local "Export Archive."
 4.  **Sync:** The Cashier shares the text summary via Telegram/WhatsApp.
 5.  **Analysis:** The Owner manually enters those figures into the "Smart Form" on their device to update profit metrics and staff performance.
-# 🎨 UI/UX Design Philosophy
+
+## 🎨 UI/UX Design Philosophy
 
 As a UI/UX-focused project, **HisabApp** prioritizes a clean, professional, and mobile-responsive interface.
 
@@ -84,7 +85,7 @@ As a UI/UX-focused project, **HisabApp** prioritizes a clean, professional, and 
 - **Role-Based Dashboards:** Distinct interfaces tailored to the functional needs of retail owners and branch cashiers.
 
 ---
-# Navigation & Routing
+## Navigation & Routing
 
 The application utilizes the `GoRouter` package for all navigation logic. This declarative routing approach offers several advantages for our team:
 
@@ -95,7 +96,7 @@ The application utilizes the `GoRouter` package for all navigation logic. This d
 - **Clean Transitions:** Provides smoother navigation patterns suitable for the web-based version of the platform.
 
 ---
-# 📂 Project Structure
+## 📂 Project Structure
 
 The project follows a clean, decoupled architecture to separate the frontend, backend, and core logic:
 
