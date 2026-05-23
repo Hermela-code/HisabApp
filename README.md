@@ -197,11 +197,13 @@ Main tables include:
 
 HisabApp implements a Cache-First data fetching strategy to minimize database queries and improve performance. This is crucial for offline-first applications.
 
-### How Cache-First Works
+### ⚡ How Cache-First Works
 
-Location: lib/infrastructure/repositories/cache_first_app_repository.dart
+**Location:** `lib/infrastructure/repositories/cache_first_app_repository.dart`
 
-The CacheFirstAppRepository wraps both local and remote repositories, implementing this workflow:
+The `CacheFirstAppRepository` wraps both local and remote repositories, implementing this workflow:
+
+```
 Request Data
     ↓
 Check Local Cache (SQLite)
@@ -213,6 +215,7 @@ Not Found ✗ → Query Remote/API
 Update Local Cache with New Data
     ↓
 Return Data
+```
 ## 🎛 State Management (Riverpod)
 
 HisabApp uses Riverpod for reactive state management, providing a clean, testable, and scalable approach to handling application state.
