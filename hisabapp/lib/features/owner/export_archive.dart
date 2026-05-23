@@ -1,61 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hisabapp/application/models/daily_report.dart';
+import 'package:hisabapp/application/providers/owner_exports_provider.dart';
+import 'package:hisabapp/core/navigation/app_router.dart';
 import 'package:hisabapp/core/presentation/widgets/owner_header.dart';
+import 'package:hisabapp/features/owner/branch_finance.dart';
 
-class ExportArchivePage extends StatefulWidget {
+class ExportArchivePage extends ConsumerStatefulWidget {
   const ExportArchivePage({super.key});
 
   @override
-  State<ExportArchivePage> createState() => _ExportArchivePageState();
+  ConsumerState<ExportArchivePage> createState() => _ExportArchivePageState();
 }
 
-class _ExportArchivePageState extends State<ExportArchivePage> {
+class _ExportArchivePageState extends ConsumerState<ExportArchivePage> {
   String _searchQuery = '';
 
-  final List<Map<String, dynamic>> _allReports = [
-    {
-      'date': '2026-04-08',
-      'branch': 'Goro',
-      'amount': '\$90,000',
-      'units': '3 units',
-      'products': '2 products',
-      'cost': '\$0 cost',
-      'status': 'pending',
-      'statusColor': Colors.amber,
-    },
-    {
-      'date': '2026-04-08',
-      'branch': 'CBE',
-      'amount': '\$60,000',
-      'units': '3 units',
-      'products': '1 product',
-      'cost': '\$200 cost',
-      'status': 'deposited',
-      'statusColor': Colors.green,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _filteredReports {
-    if (_searchQuery.isEmpty) return _allReports;
-    return _allReports.where((r) => r['date'].toString().contains(_searchQuery)).toList();
+  List<DailyReportArchive> _filteredReports(List<DailyReportArchive> reports) {
+    if (_searchQuery.isEmpty) return reports.reversed.toList();
+    return reports
+        .where((r) => r.date.contains(_searchQuery))
+        .toList()
+        .reversed
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final reports = ref.watch(ownerExportsProvider).reports;
+    final filtered = _filteredReports(reports);
+
     return OwnerLayout(
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Export / Archive', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black)),
+            const Text(
+              'Export / Archive',
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
+            ),
             const SizedBox(height: 6),
             Opacity(
               opacity: 0.5,
-              child: const Text('Closed and archive daily reports', style: TextStyle(fontSize: 16, color: Colors.black)),
+              child: const Text(
+                'Closed and archive daily reports',
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
             ),
             const SizedBox(height: 24),
-
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -69,7 +63,7 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      onChanged: (v) => setState(() => _searchQuery = v),
+                      onChanged: (v) => setState(() => _searchQuery = v.trim()),
                       decoration: InputDecoration(
                         hintText: 'Search by date (YYYY-MM-DD)',
                         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -87,21 +81,33 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
               ),
             ),
             const SizedBox(height: 24),
-
             Expanded(
-              child: _filteredReports.isEmpty
+              child: filtered.isEmpty
                   ? Center(
                       child: Opacity(
                         opacity: 0.5,
-                        child: Text('No reports found for $_searchQuery', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                        child: Text(
+                          _searchQuery.isEmpty
+                              ? 'No exported reports yet. Use Export Today on a branch page.'
+                              : 'No reports found for $_searchQuery',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        ),
                       ),
                     )
                   : ListView.separated(
-                      itemCount: _filteredReports.length,
+                      itemCount: filtered.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
                       itemBuilder: (context, i) => GestureDetector(
-                        onTap: () => context.go('/owner-report'),
-                        child: _buildReportBox(_filteredReports[i]),
+                        onTap: () => context.go(
+                          AppRouter.ownerReport,
+                          extra: ReportNavigationArgs(
+                            report: filtered[i],
+                            returnRoute: AppRouter.ownerExports,
+                            source: ReportSource.owner,
+                          ),
+                        ),
+                        child: _buildReportBox(filtered[i]),
                       ),
                     ),
             ),
@@ -111,7 +117,10 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
     );
   }
 
-  Widget _buildReportBox(Map<String, dynamic> report) {
+  Widget _buildReportBox(DailyReportArchive report) {
+    final status = report.isDeposited ? 'deposited' : 'pending';
+    final statusColor = report.isDeposited ? Colors.green : Colors.amber;
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300, width: 1.5),
@@ -123,7 +132,10 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(Icons.file_upload_outlined, size: 28, color: Colors.grey.shade700),
           ),
           const SizedBox(width: 16),
@@ -131,17 +143,28 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(report['date'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(report.date, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
-                Row(children: [
-                  Text(report['branch'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 12),
-                  Text(report['amount'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ]),
+                Row(
+                  children: [
+                    Text(
+                      report.branchName,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      report.formattedIncome,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 Opacity(
                   opacity: 0.6,
-                  child: Text('${report['units']} • ${report['products']} • ${report['cost']}', style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    '${report.totalUnits} units • ${report.distinctProducts} products • -${report.formattedOperationalCost} cost',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -150,19 +173,26 @@ class _ExportArchivePageState extends State<ExportArchivePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: (report['statusColor'] as Color).withOpacity(0.15),
+              color: statusColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  report['status'] == 'pending' ? Icons.access_time : Icons.check_circle,
+                  status == 'pending' ? Icons.access_time : Icons.check_circle,
                   size: 14,
-                  color: report['statusColor'],
+                  color: statusColor,
                 ),
                 const SizedBox(width: 6),
-                Text(report['status'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: report['statusColor'])),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
               ],
             ),
           ),

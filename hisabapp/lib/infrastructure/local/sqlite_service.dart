@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteService {
@@ -17,9 +17,31 @@ class SqliteService {
   }
 
   Future<Database> _initDb() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, 'hisab_app.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    final path = join(await getDatabasesPath(), 'hisab_app.db');
+    return await openDatabase(
+      path,
+      version: 3,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE branches ADD COLUMN location TEXT NOT NULL DEFAULT ""');
+      await db.execute('ALTER TABLE branches ADD COLUMN cashier TEXT NOT NULL DEFAULT ""');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS product_attributes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Mobile'",
+      );
+    }
   }
 
   FutureOr<void> _onCreate(Database db, int version) async {
@@ -46,7 +68,16 @@ class SqliteService {
       CREATE TABLE branches (
         id INTEGER PRIMARY KEY,
         name TEXT,
-        company_id INTEGER
+        company_id INTEGER,
+        location TEXT NOT NULL DEFAULT "",
+        cashier TEXT NOT NULL DEFAULT ""
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE product_attributes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE
       )
     ''');
 
@@ -56,6 +87,7 @@ class SqliteService {
         name TEXT,
         model TEXT,
         specification TEXT,
+        category TEXT NOT NULL DEFAULT 'Mobile',
         stock INTEGER,
         unit_price INTEGER,
         branch_id INTEGER

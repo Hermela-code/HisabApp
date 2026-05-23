@@ -20,17 +20,35 @@ class LocalAppRepository implements AppRepository {
 
   @override
   Future<void> addProduct(Product product) async {
+    _dataStore.products.removeWhere((p) => p.id == product.id);
     _dataStore.products.add(product);
   }
 
   @override
+  Future<void> deleteProduct(int productId) async {
+    _dataStore.products.removeWhere((p) => p.id == productId);
+  }
+
+  @override
   Future<void> addStaff(Staff staff) async {
+    _dataStore.staff.removeWhere((s) => s.id == staff.id);
     _dataStore.staff.add(staff);
   }
 
   @override
+  Future<void> deleteStaff(int staffId) async {
+    _dataStore.staff.removeWhere((s) => s.id == staffId);
+  }
+
+  @override
   Future<void> addBranchCost(BranchCost cost) async {
+    _dataStore.branchCosts.removeWhere((c) => c.id == cost.id);
     _dataStore.branchCosts.add(cost);
+  }
+
+  @override
+  Future<void> deleteBranchCost(int costId) async {
+    _dataStore.branchCosts.removeWhere((c) => c.id == costId);
   }
 
   @override
@@ -44,12 +62,30 @@ class LocalAppRepository implements AppRepository {
   }
 
   @override
+  Future<List<String>> getProductAttributes() async {
+    return List.unmodifiable(_dataStore.productAttributes);
+  }
+
+  @override
+  Future<void> saveProductAttributes(List<String> attributes) async {
+    _dataStore.productAttributes
+      ..clear()
+      ..addAll(attributes.map((a) => a.trim()).where((a) => a.isNotEmpty));
+  }
+
+  @override
   Future<List<Product>> getProducts(int branchId) async {
+    if (branchId == 0) {
+      return List.unmodifiable(_dataStore.products);
+    }
     return _dataStore.products.where((product) => product.branchId == branchId).toList();
   }
 
   @override
   Future<List<Staff>> getStaff(int branchId) async {
+    if (branchId == 0) {
+      return List.unmodifiable(_dataStore.staff);
+    }
     return _dataStore.staff.where((staff) => staff.branchId == branchId).toList();
   }
 
@@ -105,6 +141,7 @@ class LocalAppRepository implements AppRepository {
 
   @override
   Future<void> recordSale(Sale sale) async {
+    _dataStore.sales.removeWhere((s) => s.id == sale.id);
     _dataStore.sales.add(sale);
     final index = _dataStore.products.indexWhere((product) => product.id == sale.productId);
     if (index != -1) {

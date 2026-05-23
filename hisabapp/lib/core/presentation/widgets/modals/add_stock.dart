@@ -4,7 +4,15 @@ import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class AddStockScreen extends StatefulWidget {
   final void Function(int unitsToAdd, int? newSellingPrice, int? newCostPrice)? onAddStock;
-  const AddStockScreen({super.key, this.onAddStock});
+  final int currentStock;
+  final bool showCostFields;
+
+  const AddStockScreen({
+    super.key,
+    this.onAddStock,
+    this.currentStock = 0,
+    this.showCostFields = true,
+  });
 
   @override
   State<AddStockScreen> createState() => _AddStockScreenState();
@@ -54,23 +62,30 @@ class _AddStockScreenState extends State<AddStockScreen> {
               _buildTextField(_unitsController, 'e.g 20'),
               const SizedBox(height: 12),
 
-              Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('New Selling Price'),
-                  const Text('(optional)', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 4),
-                  _buildTextField(_sellingPriceController, '\$20,000'),
-                ])),
-                const SizedBox(width: 12),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('New Cost Price'),
-                  const Text('(optional)', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 4),
-                  _buildTextField(_costPriceController, '\$15,000'),
-                ])),
-              ]),
+              if (widget.showCostFields)
+                Row(children: [
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel('New Selling Price'),
+                    const Text('(optional)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    _buildTextField(_sellingPriceController, '\$20,000'),
+                  ])),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel('New Cost Price'),
+                    const Text('(optional)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    _buildTextField(_costPriceController, '\$15,000'),
+                  ])),
+                ])
+              else ...[
+                _buildLabel('New Selling Price'),
+                const Text('(optional)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                const SizedBox(height: 4),
+                _buildTextField(_sellingPriceController, '\$20,000'),
+              ],
               const SizedBox(height: 8),
-              const Text('Current stock: 14 units', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              Text('Current stock: ${widget.currentStock} units', style: const TextStyle(fontSize: 12, color: Colors.grey)),
               const SizedBox(height: 20),
 
               SizedBox(
@@ -81,7 +96,7 @@ class _AddStockScreenState extends State<AddStockScreen> {
                     widget.onAddStock?.call(
                       int.tryParse(_unitsController.text) ?? 0,
                       int.tryParse(_sellingPriceController.text),
-                      int.tryParse(_costPriceController.text),
+                      widget.showCostFields ? int.tryParse(_costPriceController.text) : null,
                     );
                     context.pop();
                   },

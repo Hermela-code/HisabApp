@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../application/di.dart';
+import '../../../application/providers/cashier_data_provider.dart';
+import '../../../application/providers/session_provider.dart';
+import '../../../core/navigation/auth_redirect.dart';
 import '../../../domain/entities/user.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   final String role;
-  const SignupScreen({super.key, required this.role});
+  const SignupScreen({super.key, this.role = ''});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  String? _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.role == 'cashier' || widget.role == 'owner') {
+      _selectedRole = widget.role;
+    }
+  }
+
+  String get _effectiveRole => _selectedRole ?? widget.role;
 
   Future<void> _onCreateAccount() async {
     FocusScope.of(context).unfocus();
@@ -26,6 +41,13 @@ class _SignupScreenState extends State<SignupScreen> {
     if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields.')),
+      );
+      return;
+    }
+
+    if (_effectiveRole != 'cashier' && _effectiveRole != 'owner') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your role.')),
       );
       return;
     }
@@ -41,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
       id: DateTime.now().millisecondsSinceEpoch,
       username: username,
       password: password,
-      role: widget.role == 'cashier' ? UserRole.cashier : UserRole.owner,
+      role: _effectiveRole == 'cashier' ? UserRole.cashier : UserRole.owner,
       companyId: 1,
       branchId: null,
     );
@@ -50,15 +72,16 @@ class _SignupScreenState extends State<SignupScreen> {
       await registerUserUseCase.execute(user);
       if (!mounted) return;
 
+      ref.read(sessionProvider.notifier).setUser(user);
+      if (_effectiveRole == 'cashier') {
+        ref.read(cashierDataProvider.notifier).reset();
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created successfully.')),
       );
 
-      if (widget.role == 'cashier') {
-        context.go('/cashier-dashboard');
-      } else {
-        context.go('/owner-dashboard');
-      }
+      context.go(homeForRole(user.role));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,55 +99,74 @@ class _SignupScreenState extends State<SignupScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/logo1.jpg', height: 100, fit: BoxFit.contain),
-              const SizedBox(height: 12),
-              const Text('Create Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
-              const SizedBox(height: 6),
-              const Text(
-                'Enter your detail to get started with HisabApp',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-
-              _buildInputField(label: 'User Name', controller: _nameController),
-              const SizedBox(height: 14),
-              _buildInputField(label: 'Password', controller: _passwordController, isPassword: true),
-              const SizedBox(height: 14),
-              _buildInputField(label: 'Confirm Password', controller: _confirmPasswordController, isPassword: true),
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: _onCreateAccount,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF39C12),
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text('Create Account', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/logo1.jpg', height: 100, fit: BoxFit.contain),
+                const SizedBox(height: 12),
+                const Text('Create Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                const SizedBox(height: 6),
+                const Text(
+                  'Enter your detail to get started with HisabApp',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Already have an account? ', style: TextStyle(fontSize: 13, color: Colors.black87)),
-                  GestureDetector(
-                    onTap: () => context.go('/login'),
-                    child: const Text('Log in', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+                const SizedBox(height: 24),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Role', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedRole,
+                      hint: const Text('Select your role', style: TextStyle(fontSize: 13)),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.orange, width: 2)),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'owner', child: Text('Owner', style: TextStyle(fontSize: 13))),
+                        DropdownMenuItem(value: 'cashier', child: Text('Cashier', style: TextStyle(fontSize: 13))),
+                      ],
+                      onChanged: (value) => setState(() => _selectedRole = value),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildInputField(label: 'User Name', controller: _nameController),
+                const SizedBox(height: 14),
+                _buildInputField(label: 'Password', controller: _passwordController, isPassword: true),
+                const SizedBox(height: 14),
+                _buildInputField(label: 'Confirm Password', controller: _confirmPasswordController, isPassword: true),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: _onCreateAccount,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF39C12),
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Create Account', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Already have an account? ', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                    GestureDetector(
+                      onTap: () => context.go('/login'),
+                      child: const Text('Log in', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );

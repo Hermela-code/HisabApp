@@ -1,36 +1,90 @@
-import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../core/presentation/widgets/cashier_header.dart';
-import '../../core/presentation/widgets/modals/add_branchcost.dart';
-import '../../core/presentation/widgets/modals/delete.dart';
 
-class BranchCost extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hisabapp/application/providers/cashier_data_provider.dart';
+import 'package:hisabapp/core/presentation/widgets/cashier_header.dart';
+import 'package:hisabapp/core/presentation/widgets/modals/add_branchcost.dart';
+import 'package:hisabapp/core/presentation/widgets/modals/delete.dart';
+import 'package:hisabapp/features/owner/branch_finance.dart';
+
+class BranchCost extends ConsumerStatefulWidget {
   const BranchCost({super.key});
 
-  void _showAddCostModal(BuildContext context) {
+  @override
+  ConsumerState<BranchCost> createState() => _BranchCostState();
+}
+
+class _BranchCostState extends ConsumerState<BranchCost> {
+  late String _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = _todayString();
+  }
+
+  String _todayString() => DateTime.now().toIso8601String().split('T').first;
+
+  String _formatDisplayDate(String isoDate) {
+    final parts = isoDate.split('-');
+    if (parts.length != 3) return isoDate;
+    return '${parts[1]}/${parts[2]}/${parts[0]}';
+  }
+
+  List<String> _availableDates(List<CashierCostRecord> allCosts) {
+    final dates = <String>{_todayString()};
+    for (final cost in allCosts) {
+      dates.add(cost.date);
+    }
+    final sorted = dates.toList()..sort((a, b) => b.compareTo(a));
+    return sorted;
+  }
+
+  void _showBlurModal(Widget modal) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.3),
       builder: (_) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-        child: const AddBranchCostModal(),
+        child: modal,
       ),
     );
   }
 
-  void _showDeleteModal(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.3),
-      builder: (_) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-        child: const DeleteProductView(),
+  void _showAddCostModal() {
+    _showBlurModal(
+      AddBranchCostModal(
+        onAddCost: (description, amount) {
+          ref.read(cashierDataProvider.notifier).addCost(
+                description: description,
+                amount: amount,
+                date: _selectedDate,
+              );
+        },
+      ),
+    );
+  }
+
+  void _showDeleteModal(CashierCostRecord cost) {
+    _showBlurModal(
+      DeleteProductView(
+        productName: cost.description,
+        onDelete: () {
+          ref.read(cashierDataProvider.notifier).removeCost(cost.id);
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final allCosts = ref.watch(cashierDataProvider).costs;
+    final dateOptions = _availableDates(allCosts);
+    final effectiveDate =
+        dateOptions.contains(_selectedDate) ? _selectedDate : dateOptions.first;
+    final metrics = ref.watch(cashierDailyMetricsProvider(effectiveDate));
+
     return CashierLayout(
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -38,22 +92,20 @@ class BranchCost extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Branch Costs",
+              'Branch Costs',
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             const Text(
-              "Track daily expenses",
+              'Track daily expenses',
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 24),
-
-            // Add Cost Button
             SizedBox(
               width: 160,
               height: 45,
               child: ElevatedButton.icon(
-                onPressed: () => _showAddCostModal(context),
+                onPressed: _showAddCostModal,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF2A007),
                   foregroundColor: Colors.black,
@@ -62,14 +114,12 @@ class BranchCost extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text(
-                  "Add Cost",
+                  'Add Cost',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
               ),
             ),
             const SizedBox(height: 32),
-
-            // Date Picker and Total Cost Summary Row
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -78,7 +128,7 @@ class BranchCost extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Date", style: TextStyle(fontWeight: FontWeight.w500)),
+                      const Text('Date', style: TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -88,12 +138,21 @@ class BranchCost extends StatelessWidget {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: "04/08/2026",
+                            value: effectiveDate,
                             isExpanded: true,
-                            items: const [
-                              DropdownMenuItem(value: "04/08/2026", child: Text("04/08/2026")),
-                            ],
-                            onChanged: (_) {},
+                            items: dateOptions
+                                .map(
+                                  (d) => DropdownMenuItem(
+                                    value: d,
+                                    child: Text(_formatDisplayDate(d)),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _selectedDate = value);
+                              }
+                            },
                           ),
                         ),
                       ),
@@ -109,10 +168,13 @@ class BranchCost extends StatelessWidget {
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Text("Total Costs", style: TextStyle(color: Colors.grey, fontSize: 11)),
-                        Text("\$200", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text('Total Costs', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                        Text(
+                          metrics.formattedCosts,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
@@ -120,19 +182,31 @@ class BranchCost extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-
-            // List of Cost Items (Represents the "Read" part of CRUD)
-            _buildCostItem(context, "Transport", "2026-04-08", "\$200"),
-            const SizedBox(height: 16),
-            _buildCostItem(context, "Copy", "2026-04-08", "\$300"),
+            if (metrics.costRecords.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'No costs logged for ${_formatDisplayDate(effectiveDate)}. Tap Add Cost to record an expense.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                ),
+              )
+            else
+              ...metrics.costRecords.asMap().entries.expand((entry) {
+                final cost = entry.value;
+                final isLast = entry.key == metrics.costRecords.length - 1;
+                return [
+                  _buildCostItem(cost, BranchFinance.formatMoney(cost.amount)),
+                  if (!isLast) const SizedBox(height: 16),
+                ];
+              }),
           ],
         ),
       ),
     );
   }
 
-  // Helper for the cost items to match photo_2_2026-04-27_12-57-04_2.jpg
-  Widget _buildCostItem(BuildContext context, String title, String date, String amount) {
+  Widget _buildCostItem(CashierCostRecord cost, String amount) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -153,9 +227,9 @@ class BranchCost extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(cost.description, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text(date, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(cost.date, style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
           Row(
@@ -167,7 +241,7 @@ class BranchCost extends StatelessWidget {
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
-                onPressed: () => _showDeleteModal(context),
+                onPressed: () => _showDeleteModal(cost),
               ),
             ],
           ),

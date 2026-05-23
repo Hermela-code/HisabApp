@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
+import 'package:hisabapp/domain/entities/product.dart';
+
+typedef AddProductCallback = void Function(
+  String category,
+  String name,
+  String model,
+  String specification,
+  int sellingPrice,
+  int costPrice,
+  int totalStock,
+  int remainingStock,
+);
 
 class AddProductView extends StatefulWidget {
-  final void Function(String name, String model, String specification, int sellingPrice, int costPrice, int totalStock, int remainingStock)? onAddProduct;
-  const AddProductView({super.key, this.onAddProduct});
+  final AddProductCallback? onAddProduct;
+  final bool showCostFields;
+
+  const AddProductView({super.key, this.onAddProduct, this.showCostFields = true});
 
   @override
   State<AddProductView> createState() => _AddProductViewState();
 }
 
 class _AddProductViewState extends State<AddProductView> {
+  String _selectedCategory = ProductCategories.mobile;
   final _nameController = TextEditingController();
   final _modelController = TextEditingController();
   final _specController = TextEditingController();
@@ -77,7 +92,11 @@ class _AddProductViewState extends State<AddProductView> {
               const SizedBox(height: 15),
 
               // --- Input Fields ---
-              _buildLabel('Electronics Name'),
+              _buildLabel('Electronics Type'),
+              _buildCategoryDropdown(),
+              const SizedBox(height: 10),
+
+              _buildLabel('Product Name'),
               _buildTextField(_nameController),
               const SizedBox(height: 10),
 
@@ -89,30 +108,34 @@ class _AddProductViewState extends State<AddProductView> {
               _buildTextField(_specController),
               const SizedBox(height: 15),
 
-              // Two-column fields
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Selling Price'),
-                        _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
-                      ],
+              if (widget.showCostFields)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel('Selling Price'),
+                          _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Cost Price'),
-                        _buildTextField(_costPriceController, keyboardType: TextInputType.number),
-                      ],
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel('Cost Price'),
+                          _buildTextField(_costPriceController, keyboardType: TextInputType.number),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else ...[
+                _buildLabel('Selling Price'),
+                _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
+              ],
               const SizedBox(height: 15),
 
               Row(
@@ -172,11 +195,12 @@ class _AddProductViewState extends State<AddProductView> {
                 child: ElevatedButton(
                   onPressed: () {
                     widget.onAddProduct?.call(
+                      _selectedCategory,
                       _nameController.text.trim(),
                       _modelController.text.trim(),
                       _specController.text.trim(),
                       int.tryParse(_sellingPriceController.text) ?? 0,
-                      int.tryParse(_costPriceController.text) ?? 0,
+                      widget.showCostFields ? int.tryParse(_costPriceController.text) ?? 0 : 0,
                       int.tryParse(_totalStockController.text) ?? 0,
                       int.tryParse(_remainingStockController.text) ?? 0,
                     );
@@ -219,6 +243,25 @@ class _AddProductViewState extends State<AddProductView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return SizedBox(
+      height: 38,
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedCategory,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        items: ProductCategories.all
+            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+            .toList(),
+        onChanged: (value) {
+          if (value != null) setState(() => _selectedCategory = value);
+        },
       ),
     );
   }

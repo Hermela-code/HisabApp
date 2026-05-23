@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hisabapp/application/di.dart';
 
 class ProductAttributesScreen extends StatefulWidget {
   final String role;
@@ -117,7 +118,18 @@ class _ProductAttributesScreenState extends State<ProductAttributesScreen> {
                         const SizedBox(width: 15),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _attributes.isEmpty ? null : () => context.go('/signup', extra: widget.role),
+                            onPressed: _attributes.isEmpty
+                                ? null
+                                : () async {
+                                    try {
+                                      await appRepository.saveProductAttributes(_attributes);
+                                    } catch (_) {
+                                      // Continue to signup even if persistence fails
+                                    }
+                                    if (context.mounted) {
+                                      context.go('/signup', extra: widget.role);
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFA726),
                               disabledBackgroundColor: const Color(0xFFFFA726).withOpacity(0.4),

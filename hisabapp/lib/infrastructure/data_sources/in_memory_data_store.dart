@@ -14,6 +14,7 @@ class InMemoryDataStore {
   final List<Sale> sales = [];
   final List<BranchCost> branchCosts = [];
   final List<Report> reports = [];
+  final List<String> productAttributes = [];
 
   int _userId = 1;
   int _branchId = 1;
