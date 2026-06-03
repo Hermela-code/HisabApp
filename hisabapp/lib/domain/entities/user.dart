@@ -8,7 +8,7 @@ class User {
   final int companyId;
   final int? branchId;
 
-  User({
+  const User({
     required this.id,
     required this.username,
     required this.password,

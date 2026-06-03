@@ -37,11 +37,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getBranches();
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getBranches();
-    for (final branch in remote) {
-      await _localRepository.addBranch(branch);
+    try {
+      final remote = await _remoteRepository.getBranches();
+      for (final branch in remote) {
+        await _localRepository.addBranch(branch);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -49,9 +53,13 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getProductAttributes();
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getProductAttributes();
-    await _localRepository.saveProductAttributes(remote);
-    return remote;
+    try {
+      final remote = await _remoteRepository.getProductAttributes();
+      await _localRepository.saveProductAttributes(remote);
+      return remote;
+    } catch (_) {
+      return cached;
+    }
   }
 
   @override
@@ -75,11 +83,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getProducts(branchId);
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getProducts(branchId);
-    for (final product in remote) {
-      await _localRepository.addProduct(product);
+    try {
+      final remote = await _remoteRepository.getProducts(branchId);
+      for (final product in remote) {
+        await _localRepository.addProduct(product);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -87,11 +99,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getStaff(branchId);
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getStaff(branchId);
-    for (final staff in remote) {
-      await _localRepository.addStaff(staff);
+    try {
+      final remote = await _remoteRepository.getStaff(branchId);
+      for (final staff in remote) {
+        await _localRepository.addStaff(staff);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -99,11 +115,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getBranchCosts(branchId);
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getBranchCosts(branchId);
-    for (final cost in remote) {
-      await _localRepository.addBranchCost(cost);
+    try {
+      final remote = await _remoteRepository.getBranchCosts(branchId);
+      for (final cost in remote) {
+        await _localRepository.addBranchCost(cost);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -111,11 +131,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getSales(branchId);
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getSales(branchId);
-    for (final sale in remote) {
-      await _localRepository.recordSale(sale);
+    try {
+      final remote = await _remoteRepository.getSales(branchId);
+      for (final sale in remote) {
+        await _localRepository.recordSale(sale);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -123,11 +147,15 @@ class CacheFirstAppRepository implements AppRepository {
     final cached = await _localRepository.getReports();
     if (cached.isNotEmpty) return cached;
 
-    final remote = await _remoteRepository.getReports();
-    for (final report in remote) {
-      await _localRepository.addReport(report);
+    try {
+      final remote = await _remoteRepository.getReports();
+      for (final report in remote) {
+        await _localRepository.addReport(report);
+      }
+      return remote;
+    } catch (_) {
+      return cached;
     }
-    return remote;
   }
 
   @override
@@ -135,11 +163,15 @@ class CacheFirstAppRepository implements AppRepository {
     final localUser = await _localRepository.login(username, password);
     if (localUser != null) return localUser;
 
-    final remoteUser = await _remoteRepository.login(username, password);
-    if (remoteUser != null) {
-      await _localRepository.signUp(remoteUser);
+    try {
+      final remoteUser = await _remoteRepository.login(username, password);
+      if (remoteUser != null) {
+        await _localRepository.signUp(remoteUser);
+      }
+      return remoteUser;
+    } catch (_) {
+      return null;
     }
-    return remoteUser;
   }
 
   @override

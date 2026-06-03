@@ -103,7 +103,8 @@ class _BranchDetailPageState extends ConsumerState<BranchDetailPage> {
         _isLoading = false;
       });
       _syncOwnerSession();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading branch details from repository: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }

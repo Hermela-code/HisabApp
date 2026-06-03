@@ -17,13 +17,23 @@ class SqliteService {
   }
 
   Future<Database> _initDb() async {
-    final path = join(await getDatabasesPath(), 'hisab_app.db');
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    try {
+      final path = join(await getDatabasesPath(), 'hisab_app.db');
+      return await openDatabase(
+        path,
+        version: 3,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      // Fallback to in-memory database if persistent database fails to open (e.g. web restrictions)
+      return await openDatabase(
+        inMemoryDatabasePath,
+        version: 3,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    }
   }
 
   FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {

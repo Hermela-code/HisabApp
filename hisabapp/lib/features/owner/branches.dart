@@ -41,7 +41,8 @@ class _BranchPageState extends ConsumerState<BranchPage> {
               }));
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error loading branches: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -88,8 +89,8 @@ class _BranchPageState extends ConsumerState<BranchPage> {
                       },
                     ),
                   );
-            } catch (_) {
-              // UI already updated; persistence failure is non-blocking
+            } catch (e) {
+              debugPrint('Error adding branch to repository: $e');
             }
           },
         ),
