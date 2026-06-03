@@ -52,12 +52,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return total;
   }
 
+  int _aggregateProductCosts() {
+    var total = 0;
+    for (final session in ref.read(ownerExportsProvider).branchSessions.values) {
+      total += BranchFinance.totalProductCost(session.sales);
+    }
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(ownerExportsProvider);
     final income = _aggregateIncome();
     final opCosts = _aggregateCosts();
-    final net = income - opCosts;
+    final productCosts = _aggregateProductCosts();
+    final net = income - opCosts - productCosts;
 
     return OwnerLayout(
       body: SingleChildScrollView(
