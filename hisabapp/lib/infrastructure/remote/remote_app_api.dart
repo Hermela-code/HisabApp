@@ -107,8 +107,10 @@ class RemoteAppApi {
         name: json['name'] as String,
         model: json['model'] as String,
         specification: json['specification'] as String,
+        category: json['category'] as String? ?? ProductCategories.mobile,
         stock: json['stock'] as int,
         unitPrice: json['unit_price'] as int,
+        costPrice: json['cost_price'] as int? ?? json['costPrice'] as int? ?? 0,
         branchId: json['branch_id'] as int,
       );
 
@@ -134,6 +136,7 @@ class RemoteAppApi {
         quantity: json['quantity'] as int,
         unitPrice: json['unit_price'] as int,
         total: json['total'] as int,
+        costTotal: json['cost_total'] as int? ?? json['costTotal'] as int? ?? 0,
         createdAt: DateTime.parse(json['created_at'] as String),
         branchId: json['branch_id'] as int,
       );

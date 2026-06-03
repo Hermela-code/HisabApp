@@ -6,7 +6,8 @@ import '../../features/owner/branch_finance.dart';
 
 /// Converts between owner UI maps and domain entities for SQLite persistence.
 class BranchDataMapper {
-  static Map<String, String> productToMap(Product product, {int costPrice = 0}) {
+  static Map<String, String> productToMap(Product product, {int? costPrice}) {
+    final resolvedCostPrice = costPrice ?? product.costPrice;
     return {
       'id': product.id.toString(),
       'name': product.name,
@@ -14,7 +15,7 @@ class BranchDataMapper {
       'mobile': product.electronicsType,
       'spec': product.specification,
       'price': product.unitPrice.toString(),
-      'cost_price': costPrice.toString(),
+      'cost_price': resolvedCostPrice.toString(),
       'units': product.stock.toString(),
     };
   }
@@ -29,11 +30,13 @@ class BranchDataMapper {
       category: map['mobile'] ?? ProductCategories.mobile,
       stock: int.tryParse(map['units'] ?? '0') ?? 0,
       unitPrice: int.tryParse(map['price'] ?? '0') ?? 0,
+      costPrice: int.tryParse(map['cost_price'] ?? '0') ?? 0,
       branchId: branchId,
     );
   }
 
   static Map<String, String> saleToMap(Sale sale, {int? costTotal}) {
+    final resolvedCostTotal = costTotal ?? sale.costTotal;
     return {
       'id': sale.id.toString(),
       'product_id': sale.productId.toString(),
@@ -43,7 +46,7 @@ class BranchDataMapper {
       'salesperson': sale.salesperson,
       'qty': sale.quantity.toString(),
       'total': sale.total.toString(),
-      if (costTotal != null) 'cost_total': costTotal.toString(),
+      'cost_total': resolvedCostTotal.toString(),
     };
   }
 
@@ -59,6 +62,7 @@ class BranchDataMapper {
       quantity: int.tryParse(map['qty'] ?? '0') ?? 0,
       unitPrice: int.tryParse(map['unit_price'] ?? '0') ?? 0,
       total: int.tryParse(map['total'] ?? '0') ?? 0,
+      costTotal: int.tryParse(map['cost_total'] ?? '0') ?? 0,
       createdAt: DateTime.tryParse(date) ?? DateTime.now(),
       branchId: branchId,
     );

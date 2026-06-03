@@ -14,6 +14,7 @@ class Product {
   final String category;
   final int stock;
   final int unitPrice;
+  final int costPrice;
   final int branchId;
 
   Product({
@@ -24,6 +25,7 @@ class Product {
     this.category = ProductCategories.mobile,
     required this.stock,
     required this.unitPrice,
+    this.costPrice = 0,
     required this.branchId,
   });
 
@@ -38,6 +40,7 @@ class Product {
     String? category,
     int? stock,
     int? unitPrice,
+    int? costPrice,
     int? branchId,
   }) {
     return Product(
@@ -48,6 +51,7 @@ class Product {
       category: category ?? this.category,
       stock: stock ?? this.stock,
       unitPrice: unitPrice ?? this.unitPrice,
+      costPrice: costPrice ?? this.costPrice,
       branchId: branchId ?? this.branchId,
     );
   }

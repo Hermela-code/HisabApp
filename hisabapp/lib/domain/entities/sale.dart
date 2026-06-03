@@ -6,6 +6,7 @@ class Sale {
   final int quantity;
   final int unitPrice;
   final int total;
+  final int costTotal;
   final DateTime createdAt;
   final int branchId;
 
@@ -17,6 +18,7 @@ class Sale {
     required this.quantity,
     required this.unitPrice,
     required this.total,
+    this.costTotal = 0,
     required this.createdAt,
     required this.branchId,
   });

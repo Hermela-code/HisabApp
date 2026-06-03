@@ -544,6 +544,7 @@ class _RecordSalePageState extends ConsumerState<RecordSalePage> {
                       quantity: quantity,
                       unitPrice: unitPrice,
                       total: quantity * unitPrice,
+                      costTotal: quantity * matchingProduct.costPrice,
                       createdAt: DateTime.now(),
                       branchId: matchingProduct.branchId,
                     );

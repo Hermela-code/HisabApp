@@ -21,7 +21,7 @@ class SqliteService {
       final path = join(await getDatabasesPath(), 'hisab_app.db');
       return await openDatabase(
         path,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -29,7 +29,7 @@ class SqliteService {
       // Fallback to in-memory database if persistent database fails to open (e.g. web restrictions)
       return await openDatabase(
         inMemoryDatabasePath,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -51,6 +51,14 @@ class SqliteService {
       await db.execute(
         "ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Mobile'",
       );
+    }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN cost_price INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE sales ADD COLUMN cost_total INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
     }
   }
 
@@ -100,6 +108,7 @@ class SqliteService {
         category TEXT NOT NULL DEFAULT 'Mobile',
         stock INTEGER,
         unit_price INTEGER,
+        cost_price INTEGER NOT NULL DEFAULT 0,
         branch_id INTEGER
       )
     ''');
@@ -132,6 +141,7 @@ class SqliteService {
         quantity INTEGER,
         unit_price INTEGER,
         total INTEGER,
+        cost_total INTEGER NOT NULL DEFAULT 0,
         created_at TEXT,
         branch_id INTEGER
       )

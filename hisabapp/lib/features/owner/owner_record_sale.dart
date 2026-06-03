@@ -135,7 +135,7 @@ class _OwnerRecordSalePageState extends State<OwnerRecordSalePage> {
       final loadedProducts = await appRepository.getProducts(_branchId);
       stockLines.addAll(
         loadedProducts
-            .map((p) => _StockLine(product: p, category: p.electronicsType, costPrice: 0))
+            .map((p) => _StockLine(product: p, category: p.electronicsType, costPrice: p.costPrice))
             .where((line) => line.product.stock > 0),
       );
     }
@@ -171,9 +171,10 @@ class _OwnerRecordSalePageState extends State<OwnerRecordSalePage> {
     return maps.asMap().entries.map((entry) {
       final map = entry.value;
       final stock = int.tryParse(map['units'] ?? '0') ?? 0;
+      final cost = int.tryParse(map['cost_price'] ?? '0') ?? 0;
       return _StockLine(
         category: map['mobile'] ?? map['name'] ?? 'Product',
-        costPrice: int.tryParse(map['cost_price'] ?? '0') ?? 0,
+        costPrice: cost,
         product: Product(
           id: entry.key + 1,
           name: map['name'] ?? '',
@@ -181,6 +182,7 @@ class _OwnerRecordSalePageState extends State<OwnerRecordSalePage> {
           specification: map['spec'] ?? '',
           stock: stock,
           unitPrice: int.tryParse(map['price'] ?? '0') ?? 0,
+          costPrice: cost,
           branchId: branchId,
         ),
       );
@@ -574,6 +576,7 @@ class _OwnerRecordSalePageState extends State<OwnerRecordSalePage> {
       quantity: quantity,
       unitPrice: unitPrice,
       total: saleTotal,
+      costTotal: costTotal,
       createdAt: DateTime.now(),
       branchId: matchingProduct.branchId,
     );

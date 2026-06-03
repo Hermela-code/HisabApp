@@ -46,6 +46,7 @@ class SqliteAppRepository implements AppRepository {
       'category': product.electronicsType,
       'stock': product.stock,
       'unit_price': product.unitPrice,
+      'cost_price': product.costPrice,
       'branch_id': product.branchId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -145,6 +146,7 @@ class SqliteAppRepository implements AppRepository {
       category: row['category'] as String? ?? ProductCategories.mobile,
       stock: row['stock'] as int,
       unitPrice: row['unit_price'] as int,
+      costPrice: row['cost_price'] as int? ?? 0,
       branchId: row['branch_id'] as int,
     )).toList();
   }
@@ -188,6 +190,7 @@ class SqliteAppRepository implements AppRepository {
       quantity: row['quantity'] as int,
       unitPrice: row['unit_price'] as int,
       total: row['total'] as int,
+      costTotal: row['cost_total'] as int? ?? 0,
       createdAt: DateTime.parse(row['created_at'] as String),
       branchId: row['branch_id'] as int,
     )).toList();
@@ -242,6 +245,7 @@ class SqliteAppRepository implements AppRepository {
       'quantity': sale.quantity,
       'unit_price': sale.unitPrice,
       'total': sale.total,
+      'cost_total': sale.costTotal,
       'created_at': sale.createdAt.toIso8601String(),
       'branch_id': sale.branchId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
