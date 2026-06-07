@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../application/providers/cashier_data_provider.dart';
 import '../../core/presentation/widgets/cashier_header.dart';
-import '../../application/di.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/entities/sale.dart';
 
-class RecordSalePage extends StatefulWidget {
+class RecordSalePage extends ConsumerStatefulWidget {
   const RecordSalePage({super.key});
 
   @override
-  State<RecordSalePage> createState() => _RecordSalePageState();
+  ConsumerState<RecordSalePage> createState() => _RecordSalePageState();
 }
 
-class _RecordSalePageState extends State<RecordSalePage> {
+class _RecordSalePageState extends ConsumerState<RecordSalePage> {
   // Dropdown selections
   String? selectedElectronicsType;
   String? selectedProductName;
@@ -26,19 +28,10 @@ class _RecordSalePageState extends State<RecordSalePage> {
   final TextEditingController customerNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
 
-  // Sample data for dropdowns
-  final List<String> electronicsTypes = ['Smartphones', 'Laptops', 'Tablets', 'Accessories'];
-  final List<String> productNames = ['iPhone 15', 'Samsung S24', 'MacBook Pro', 'iPad Air'];
-  final List<String> models = ['128GB', '256GB', '512GB', '1TB'];
-  final List<String> specifications = ['6.1 inch', '6.7 inch', '13 inch', '11 inch'];
-  final List<String> salespersons = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams'];
-
-  // Auto-calculate total when quantity or unit price changes
   void updateTotal() {
-    int quantity = int.tryParse(quantityController.text) ?? 0;
-    int unitPrice = int.tryParse(unitPriceController.text) ?? 0;
-    int total = quantity * unitPrice;
-    totalController.text = total.toString();
+    final quantity = int.tryParse(quantityController.text) ?? 0;
+    final unitPrice = int.tryParse(unitPriceController.text) ?? 0;
+    totalController.text = (quantity * unitPrice).toString();
   }
 
   @override
@@ -46,6 +39,76 @@ class _RecordSalePageState extends State<RecordSalePage> {
     super.initState();
     quantityController.addListener(updateTotal);
     unitPriceController.addListener(updateTotal);
+  }
+
+  List<Product> _inStock(List<Product> products) =>
+      products.where((p) => p.stock > 0).toList();
+
+  List<Product> _byCategory(List<Product> products) {
+    if (selectedElectronicsType == null) return products;
+    return products
+        .where(
+          (p) =>
+              p.electronicsType.toLowerCase() ==
+              selectedElectronicsType!.toLowerCase(),
+        )
+        .toList();
+  }
+
+  List<String> _productNames(List<Product> inStock) => _byCategory(inStock)
+      .map((p) => p.name)
+      .toSet()
+      .toList();
+
+  List<String> _models(List<Product> inStock) {
+    final scoped = _byCategory(inStock).where(
+      (p) => selectedProductName == null || p.name == selectedProductName,
+    );
+    return scoped.map((p) => p.model).toSet().toList();
+  }
+
+  List<String> _specifications(List<Product> inStock) {
+    return _byCategory(inStock)
+        .where((p) {
+          if (selectedProductName != null && p.name != selectedProductName) {
+            return false;
+          }
+          if (selectedModel != null && p.model != selectedModel) {
+            return false;
+          }
+          return true;
+        })
+        .map((p) => p.specification)
+        .toSet()
+        .toList();
+  }
+
+  Product? _selectedProduct(List<Product> products) {
+    if (selectedElectronicsType == null ||
+        selectedProductName == null ||
+        selectedModel == null ||
+        selectedSpecification == null) {
+      return null;
+    }
+    try {
+      return products.firstWhere(
+        (product) =>
+            product.electronicsType.toLowerCase() ==
+                selectedElectronicsType!.toLowerCase() &&
+            product.name == selectedProductName &&
+            product.model == selectedModel &&
+            product.specification == selectedSpecification,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _updateSelectedProductFields(List<Product> products) {
+    final product = _selectedProduct(products);
+    if (product != null) {
+      unitPriceController.text = product.unitPrice.toString();
+    }
   }
 
   @override
@@ -58,8 +121,67 @@ class _RecordSalePageState extends State<RecordSalePage> {
     super.dispose();
   }
 
+  Widget _buildDropdown(
+    String label,
+    List<String> items,
+    String? value,
+    String hint,
+    ValueChanged<String?>? onChanged,
+  ) {
+    final enabled = onChanged != null && items.isNotEmpty;
+    final selected = value != null && items.contains(value) ? value : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade400),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: selected,
+              hint: Text(hint, style: TextStyle(color: Colors.grey.shade600)),
+              items: enabled
+                  ? items
+                      .map(
+                        (item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        ),
+                      )
+                      .toList()
+                  : const [],
+              onChanged: enabled ? onChanged : null,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cashierData = ref.watch(cashierDataProvider);
+    final allProducts = cashierData.products;
+    final inStock = _inStock(allProducts);
+    final salespersons = cashierData.staff.map((s) => s.name).toList();
+    final hasStock = inStock.isNotEmpty;
+    final hasStaff = salespersons.isNotEmpty;
+
     return CashierLayout(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -87,6 +209,19 @@ class _RecordSalePageState extends State<RecordSalePage> {
                 ),
               ),
             ),
+            if (!hasStock || !hasStaff) ...[
+              const SizedBox(height: 12),
+              if (!hasStock)
+                Text(
+                  'No products in stock. Add products in Inventory first.',
+                  style: TextStyle(fontSize: 13, color: Colors.orange.shade800),
+                ),
+              if (!hasStaff)
+                Text(
+                  'No staff registered. Add staff on the Staff page first.',
+                  style: TextStyle(fontSize: 13, color: Colors.orange.shade800),
+                ),
+            ],
             const SizedBox(height: 24),
 
             // Main input box
@@ -101,167 +236,74 @@ class _RecordSalePageState extends State<RecordSalePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Electronics Type dropdown
-                  const Text(
+                  _buildDropdown(
                     'Electronics Type',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedElectronicsType,
-                        hint: Opacity(
-                          opacity: 0.5,
-                          child: const Text('Select Product'),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: electronicsTypes.map((type) {
-                          return DropdownMenuItem(
-                            value: type,
-                            child: Text(type),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedElectronicsType = value;
-                          });
-                        },
-                      ),
-                    ),
+                    ProductCategories.all,
+                    selectedElectronicsType,
+                    'Select type',
+                    hasStock
+                        ? (value) {
+                            setState(() {
+                              selectedElectronicsType = value;
+                              selectedProductName = null;
+                              selectedModel = null;
+                              selectedSpecification = null;
+                              unitPriceController.clear();
+                            });
+                          }
+                        : null,
                   ),
                   const SizedBox(height: 20),
-
-                  // 2. Product Name dropdown
-                  const Text(
+                  _buildDropdown(
                     'Product Name',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedProductName,
-                        hint: Opacity(
-                          opacity: 0.5,
-                          child: const Text('Select Product'),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: productNames.map((name) {
-                          return DropdownMenuItem(
-                            value: name,
-                            child: Text(name),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedProductName = value;
-                          });
-                        },
-                      ),
-                    ),
+                    _productNames(inStock),
+                    selectedProductName,
+                    'Select product',
+                    hasStock && selectedElectronicsType != null
+                        ? (value) {
+                            setState(() {
+                              selectedProductName = value;
+                              selectedModel = null;
+                              selectedSpecification = null;
+                            });
+                          }
+                        : null,
                   ),
                   const SizedBox(height: 20),
-
-                  // 3. Model dropdown
-                  const Text(
+                  _buildDropdown(
                     'Model',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedModel,
-                        hint: Opacity(
-                          opacity: 0.5,
-                          child: const Text('Select Model'),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: models.map((model) {
-                          return DropdownMenuItem(
-                            value: model,
-                            child: Text(model),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedModel = value;
-                          });
-                        },
-                      ),
-                    ),
+                    _models(inStock),
+                    selectedModel,
+                    'Select Model',
+                    hasStock &&
+                            selectedElectronicsType != null &&
+                            selectedProductName != null
+                        ? (value) {
+                            setState(() {
+                              selectedModel = value;
+                              selectedSpecification = null;
+                              _updateSelectedProductFields(allProducts);
+                            });
+                          }
+                        : null,
                   ),
                   const SizedBox(height: 20),
-
-                  // 4. Specification dropdown
-                  const Text(
+                  _buildDropdown(
                     'Specification',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedSpecification,
-                        hint: Opacity(
-                          opacity: 0.5,
-                          child: const Text('Select Product'),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: specifications.map((spec) {
-                          return DropdownMenuItem(
-                            value: spec,
-                            child: Text(spec),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSpecification = value;
-                          });
-                        },
-                      ),
-                    ),
+                    _specifications(inStock),
+                    selectedSpecification,
+                    'Select Specification',
+                    hasStock &&
+                            selectedElectronicsType != null &&
+                            selectedProductName != null &&
+                            selectedModel != null
+                        ? (value) {
+                            setState(() {
+                              selectedSpecification = value;
+                              _updateSelectedProductFields(allProducts);
+                            });
+                          }
+                        : null,
                   ),
                   const SizedBox(height: 24),
 
@@ -337,7 +379,7 @@ class _RecordSalePageState extends State<RecordSalePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Total',
+                                'Total',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -365,45 +407,14 @@ class _RecordSalePageState extends State<RecordSalePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  // Salesperson dropdown
-                  const Text(
+                  _buildDropdown(
                     'Salesperson',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedSalesperson,
-                        hint: Opacity(
-                          opacity: 0.5,
-                          child: const Text('Select Salesperson'),
-                        ),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: salespersons.map((person) {
-                          return DropdownMenuItem(
-                            value: person,
-                            child: Text(person),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSalesperson = value;
-                          });
-                        },
-                      ),
-                    ),
+                    salespersons,
+                    selectedSalesperson,
+                    'Select Salesperson',
+                    hasStaff
+                        ? (value) => setState(() => selectedSalesperson = value)
+                        : null,
                   ),
                   const SizedBox(height: 20),
 
@@ -483,7 +494,10 @@ class _RecordSalePageState extends State<RecordSalePage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () async {
+                onPressed: hasStock &&
+                        hasStaff &&
+                        selectedElectronicsType != null
+                    ? () async {
                   if (selectedElectronicsType == null ||
                       selectedProductName == null ||
                       selectedModel == null ||
@@ -494,25 +508,56 @@ class _RecordSalePageState extends State<RecordSalePage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please fill all required fields')),
                     );
-                  } else {
+                    return;
+                  }
+                    final matchingProduct = _selectedProduct(allProducts);
+                    if (matchingProduct == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Selected product combination does not match stock.')),
+                      );
+                      return;
+                    }
                     final quantity = int.tryParse(quantityController.text) ?? 0;
                     final unitPrice = int.tryParse(unitPriceController.text) ?? 0;
+                    if (quantity <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Quantity must be greater than zero.')),
+                      );
+                      return;
+                    }
+                    if (quantity > matchingProduct.stock) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Only ${matchingProduct.stock} unit(s) available in stock.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
                     final sale = Sale(
                       id: DateTime.now().microsecondsSinceEpoch,
-                      productId: 0,
+                      productId: matchingProduct.id,
                       productName: selectedProductName!,
                       salesperson: selectedSalesperson!,
                       quantity: quantity,
                       unitPrice: unitPrice,
                       total: quantity * unitPrice,
+                      costTotal: quantity * matchingProduct.costPrice,
                       createdAt: DateTime.now(),
-                      branchId: 0,
+                      branchId: matchingProduct.branchId,
                     );
-                    await recordSaleUseCase.execute(sale);
+
+                    await ref.read(cashierDataProvider.notifier).recordSale(sale);
+
                     if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Sale recorded successfully')),
+                    );
                     context.go('/cashier-daily-sales');
-                  }
-                },
+                }
+                    : null,
                 icon: const Icon(Icons.shopping_cart, size: 20, color: Colors.black),
                 label: const Text(
                   'Record Sales',

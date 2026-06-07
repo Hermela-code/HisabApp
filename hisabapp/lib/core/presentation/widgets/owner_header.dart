@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../navigation/logout.dart';
 import '../theme/app_colors.dart';
 
-// --- 1. THE OWNER HEADER ---
 class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
   const OwnerHeader({super.key});
 
@@ -34,19 +36,17 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-// --- 2. THE OWNER SIDEBAR ---
-class OwnerSidebar extends StatelessWidget {
+class OwnerSidebar extends ConsumerWidget {
   const OwnerSidebar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const Color sidebarBg = Color(0xFF0F172A);
 
     return Drawer(
       backgroundColor: sidebarBg,
       child: Column(
         children: [
-          // MINIMIZED HEADER
           Container(
             padding: const EdgeInsets.only(top: 50, left: 20, bottom: 20),
             decoration: const BoxDecoration(
@@ -69,42 +69,48 @@ class OwnerSidebar extends StatelessWidget {
               ],
             ),
           ),
-
-          // OWNER SPECIFIC NAVIGATION
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(context, Icons.grid_view, "Dashboard", '/owner-dashboard'),
-                _buildMenuItem(context, Icons.business_outlined, "Branches", '/owner-branches'),
-                _buildMenuItem(context, Icons.ios_share_outlined, "Exports", '/owner-exports'),
-                _buildMenuItem(context, Icons.logout, "Logout", '/login'),
+                _buildMenuItem(context, ref, Icons.grid_view, 'Dashboard', '/owner-dashboard'),
+                _buildMenuItem(context, ref, Icons.business_outlined, 'Branches', '/owner-branches'),
+                _buildMenuItem(context, ref, Icons.ios_share_outlined, 'Exports', '/owner-exports'),
+                _buildMenuItem(context, ref, Icons.logout, 'Logout', null, isLogout: true),
               ],
             ),
           ),
-
-          // SETTINGS AT BOTTOM
           const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-          _buildMenuItem(context, Icons.settings_outlined, "Settings", '/settings'),
+          _buildMenuItem(context, ref, Icons.settings_outlined, 'Settings', '/settings'),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String title, String? route) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    WidgetRef ref,
+    IconData icon,
+    String title,
+    String? route, {
+    bool isLogout = false,
+  }) {
     return ListTile(
       leading: Icon(icon, color: Colors.white, size: 22),
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
-      onTap: route == null ? null : () {
+      onTap: () {
         context.pop();
-        context.go(route);
+        if (isLogout) {
+          performLogout(context, ref);
+        } else if (route != null) {
+          context.go(route);
+        }
       },
     );
   }
 }
 
-// --- 3. THE OWNER LAYOUT WIDGET ---
 class OwnerLayout extends StatelessWidget {
   final Widget body;
   const OwnerLayout({super.key, required this.body});
@@ -118,21 +124,4 @@ class OwnerLayout extends StatelessWidget {
       body: body,
     );
   }
-}
-
-// --- TESTING BLOCK ---
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: OwnerLayout(
-        body: Center(
-          child: Text(
-            "Owner Dashboard View\nSidebar menu items updated.",
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    ),
-  );
 }

@@ -3,7 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
 class DeleteProductView extends StatefulWidget {
-  const DeleteProductView({super.key});
+  final String productName;
+  final VoidCallback? onDelete;
+
+  const DeleteProductView({
+    super.key,
+    this.productName = 'this product',
+    this.onDelete,
+  });
 
   @override
   State<DeleteProductView> createState() => _DeleteProductViewState();
@@ -64,8 +71,8 @@ class _DeleteProductViewState extends State<DeleteProductView> {
               const SizedBox(height: 12),
 
               // --- Description ---
-              const Text(
-                'Are you sure you want to delete "tecno"? this action cannot undone.',
+              Text(
+                'Are you sure you want to delete "${widget.productName}"? This action cannot be undone.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -81,6 +88,7 @@ class _DeleteProductViewState extends State<DeleteProductView> {
                 height: 42,
                 child: ElevatedButton(
                   onPressed: () {
+                    widget.onDelete?.call();
                     context.pop();
                   },
                   style: ElevatedButton.styleFrom(

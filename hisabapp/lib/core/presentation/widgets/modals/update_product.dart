@@ -2,23 +2,80 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 
+typedef ProductUpdateCallback = void Function(
+  String name,
+  String model,
+  String specification,
+  int sellingPrice,
+  int costPrice,
+  int stock,
+);
+
 class UpdateProductView extends StatefulWidget {
-  const UpdateProductView({super.key});
+  final String? initialName;
+  final String? initialModel;
+  final String? initialSpecification;
+  final int? initialSellingPrice;
+  final int? initialCostPrice;
+  final int? initialStock;
+  final ProductUpdateCallback? onUpdate;
+  final bool showCostFields;
+
+  const UpdateProductView({
+    super.key,
+    this.initialName,
+    this.initialModel,
+    this.initialSpecification,
+    this.initialSellingPrice,
+    this.initialCostPrice,
+    this.initialStock,
+    this.onUpdate,
+    this.showCostFields = true,
+  });
 
   @override
   State<UpdateProductView> createState() => _UpdateProductViewState();
 }
 
 class _UpdateProductViewState extends State<UpdateProductView> {
-  final _nameController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _specController = TextEditingController();
-  final _sellingPriceController = TextEditingController();
-  final _costPriceController = TextEditingController();
-  final _totalStockController = TextEditingController();
-  final _remainingStockController = TextEditingController();
-  final _lowStockController = TextEditingController(text: '5');
-  final _highStockController = TextEditingController(text: '10');
+  late final TextEditingController _nameController;
+  late final TextEditingController _modelController;
+  late final TextEditingController _specController;
+  late final TextEditingController _sellingPriceController;
+  late final TextEditingController _costPriceController;
+  late final TextEditingController _stockController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName ?? '');
+    _modelController = TextEditingController(text: widget.initialModel ?? '');
+    _specController = TextEditingController(text: widget.initialSpecification ?? '');
+    _sellingPriceController = TextEditingController(
+      text: widget.initialSellingPrice != null && widget.initialSellingPrice! > 0
+          ? widget.initialSellingPrice.toString()
+          : '',
+    );
+    _costPriceController = TextEditingController(
+      text: widget.initialCostPrice != null && widget.initialCostPrice! > 0
+          ? widget.initialCostPrice.toString()
+          : '',
+    );
+    _stockController = TextEditingController(
+      text: widget.initialStock != null ? widget.initialStock.toString() : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _modelController.dispose();
+    _specController.dispose();
+    _sellingPriceController.dispose();
+    _costPriceController.dispose();
+    _stockController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +109,7 @@ class _UpdateProductViewState extends State<UpdateProductView> {
               ),
               const SizedBox(height: 15),
 
-              _buildLabel('Electronics Name'),
+              _buildLabel('Product Name'),
               _buildTextField(_nameController),
               const SizedBox(height: 10),
 
@@ -64,50 +121,45 @@ class _UpdateProductViewState extends State<UpdateProductView> {
               _buildTextField(_specController),
               const SizedBox(height: 15),
 
-              Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('Selling Price'),
-                  _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
-                ])),
-                const SizedBox(width: 15),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('Cost Price'),
-                  _buildTextField(_costPriceController, keyboardType: TextInputType.number),
-                ])),
-              ]),
+              if (widget.showCostFields)
+                Row(children: [
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel('Selling Price'),
+                    _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
+                  ])),
+                  const SizedBox(width: 15),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    _buildLabel('Cost Price'),
+                    _buildTextField(_costPriceController, keyboardType: TextInputType.number),
+                  ])),
+                ])
+              else ...[
+                _buildLabel('Selling Price'),
+                _buildTextField(_sellingPriceController, keyboardType: TextInputType.number),
+              ],
               const SizedBox(height: 15),
 
-              Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('Total Stock'),
-                  _buildTextField(_totalStockController, keyboardType: TextInputType.number),
-                ])),
-                const SizedBox(width: 15),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('Remaining Stock'),
-                  _buildTextField(_remainingStockController, keyboardType: TextInputType.number),
-                ])),
-              ]),
-              const SizedBox(height: 15),
-
-              Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('Low Stock Alert'),
-                  _buildTextField(_lowStockController, keyboardType: TextInputType.number),
-                ])),
-                const SizedBox(width: 15),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _buildLabel('High Stock Alert'),
-                  _buildTextField(_highStockController, keyboardType: TextInputType.number),
-                ])),
-              ]),
+              _buildLabel('Stock (units)'),
+              _buildTextField(_stockController, keyboardType: TextInputType.number),
               const SizedBox(height: 25),
 
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    final name = _nameController.text.trim();
+                    if (name.isEmpty) return;
+                    widget.onUpdate?.call(
+                      name,
+                      _modelController.text.trim(),
+                      _specController.text.trim(),
+                      int.tryParse(_sellingPriceController.text) ?? 0,
+                      widget.showCostFields ? int.tryParse(_costPriceController.text) ?? 0 : 0,
+                      int.tryParse(_stockController.text) ?? 0,
+                    );
+                    context.pop();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryYellow,
                     elevation: 0,

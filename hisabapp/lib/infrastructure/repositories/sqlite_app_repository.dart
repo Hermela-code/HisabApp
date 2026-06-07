@@ -24,7 +24,15 @@ class SqliteAppRepository implements AppRepository {
       'id': branch.id,
       'name': branch.name,
       'company_id': branch.companyId,
+      'location': branch.location,
+      'cashier': branch.cashier,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> deleteProduct(int productId) async {
+    final db = await _db;
+    await db.delete('products', where: 'id = ?', whereArgs: [productId]);
   }
 
   @override
@@ -35,8 +43,10 @@ class SqliteAppRepository implements AppRepository {
       'name': product.name,
       'model': product.model,
       'specification': product.specification,
+      'category': product.electronicsType,
       'stock': product.stock,
       'unit_price': product.unitPrice,
+      'cost_price': product.costPrice,
       'branch_id': product.branchId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -47,8 +57,15 @@ class SqliteAppRepository implements AppRepository {
     await db.insert('staff', {
       'id': staff.id,
       'name': staff.name,
+      'phone': staff.phone,
       'branch_id': staff.branchId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> deleteStaff(int staffId) async {
+    final db = await _db;
+    await db.delete('staff', where: 'id = ?', whereArgs: [staffId]);
   }
 
   @override
@@ -61,6 +78,12 @@ class SqliteAppRepository implements AppRepository {
       'amount': cost.amount,
       'created_at': cost.createdAt.toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> deleteBranchCost(int costId) async {
+    final db = await _db;
+    await db.delete('branch_costs', where: 'id = ?', whereArgs: [costId]);
   }
 
   @override
@@ -86,20 +109,44 @@ class SqliteAppRepository implements AppRepository {
       id: row['id'] as int,
       name: row['name'] as String,
       companyId: row['company_id'] as int,
+      location: row['location'] as String? ?? '',
+      cashier: row['cashier'] as String? ?? '',
     )).toList();
+  }
+
+  @override
+  Future<List<String>> getProductAttributes() async {
+    final db = await _db;
+    final rows = await db.query('product_attributes', orderBy: 'id ASC');
+    return rows.map((row) => row['name'] as String).toList();
+  }
+
+  @override
+  Future<void> saveProductAttributes(List<String> attributes) async {
+    final db = await _db;
+    await db.delete('product_attributes');
+    for (final name in attributes) {
+      final trimmed = name.trim();
+      if (trimmed.isEmpty) continue;
+      await db.insert('product_attributes', {'name': trimmed});
+    }
   }
 
   @override
   Future<List<Product>> getProducts(int branchId) async {
     final db = await _db;
-    final rows = await db.query('products', where: 'branch_id = ?', whereArgs: [branchId]);
+    final rows = branchId == 0
+        ? await db.query('products')
+        : await db.query('products', where: 'branch_id = ?', whereArgs: [branchId]);
     return rows.map((row) => Product(
       id: row['id'] as int,
       name: row['name'] as String,
       model: row['model'] as String,
       specification: row['specification'] as String,
+      category: row['category'] as String? ?? ProductCategories.mobile,
       stock: row['stock'] as int,
       unitPrice: row['unit_price'] as int,
+      costPrice: row['cost_price'] as int? ?? 0,
       branchId: row['branch_id'] as int,
     )).toList();
   }
@@ -107,10 +154,13 @@ class SqliteAppRepository implements AppRepository {
   @override
   Future<List<Staff>> getStaff(int branchId) async {
     final db = await _db;
-    final rows = await db.query('staff', where: 'branch_id = ?', whereArgs: [branchId]);
+    final rows = branchId == 0
+        ? await db.query('staff')
+        : await db.query('staff', where: 'branch_id = ?', whereArgs: [branchId]);
     return rows.map((row) => Staff(
       id: row['id'] as int,
       name: row['name'] as String,
+      phone: row['phone'] as String? ?? '',
       branchId: row['branch_id'] as int,
     )).toList();
   }
@@ -140,6 +190,7 @@ class SqliteAppRepository implements AppRepository {
       quantity: row['quantity'] as int,
       unitPrice: row['unit_price'] as int,
       total: row['total'] as int,
+      costTotal: row['cost_total'] as int? ?? 0,
       createdAt: DateTime.parse(row['created_at'] as String),
       branchId: row['branch_id'] as int,
     )).toList();
@@ -194,6 +245,7 @@ class SqliteAppRepository implements AppRepository {
       'quantity': sale.quantity,
       'unit_price': sale.unitPrice,
       'total': sale.total,
+      'cost_total': sale.costTotal,
       'created_at': sale.createdAt.toIso8601String(),
       'branch_id': sale.branchId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);

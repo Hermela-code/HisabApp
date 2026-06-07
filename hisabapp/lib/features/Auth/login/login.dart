@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../application/di.dart';
+import '../../../application/providers/cashier_data_provider.dart';
+import '../../../application/providers/session_provider.dart';
+import '../../../core/navigation/auth_redirect.dart';
 import '../../../domain/entities/user.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _selectedRole;
@@ -44,11 +48,25 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (user.role == UserRole.cashier) {
-      context.go('/cashier-dashboard');
-    } else {
-      context.go('/owner-dashboard');
+    final expectedRole =
+        _selectedRole == 'cashier' ? UserRole.cashier : UserRole.owner;
+    if (user.role != expectedRole) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'This account is registered as ${user.role == UserRole.cashier ? 'Cashier' : 'Owner'}, not ${_selectedRole == 'cashier' ? 'Cashier' : 'Owner'}.',
+          ),
+        ),
+      );
+      return;
     }
+
+    ref.read(sessionProvider.notifier).setUser(user);
+    if (user.role == UserRole.cashier) {
+      await ref.read(cashierDataProvider.notifier).reload();
+    }
+    if (!mounted) return;
+    context.go(homeForRole(user.role));
   }
 
   @override

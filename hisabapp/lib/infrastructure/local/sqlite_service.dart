@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteService {
@@ -17,9 +17,49 @@ class SqliteService {
   }
 
   Future<Database> _initDb() async {
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final path = join(documentsDirectory.path, 'hisab_app.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    try {
+      final path = join(await getDatabasesPath(), 'hisab_app.db');
+      return await openDatabase(
+        path,
+        version: 4,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      // Fallback to in-memory database if persistent database fails to open (e.g. web restrictions)
+      return await openDatabase(
+        inMemoryDatabasePath,
+        version: 4,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    }
+  }
+
+  FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE branches ADD COLUMN location TEXT NOT NULL DEFAULT ""');
+      await db.execute('ALTER TABLE branches ADD COLUMN cashier TEXT NOT NULL DEFAULT ""');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS product_attributes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Mobile'",
+      );
+    }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN cost_price INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE sales ADD COLUMN cost_total INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+    }
   }
 
   FutureOr<void> _onCreate(Database db, int version) async {
@@ -46,7 +86,16 @@ class SqliteService {
       CREATE TABLE branches (
         id INTEGER PRIMARY KEY,
         name TEXT,
-        company_id INTEGER
+        company_id INTEGER,
+        location TEXT NOT NULL DEFAULT "",
+        cashier TEXT NOT NULL DEFAULT ""
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE product_attributes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE
       )
     ''');
 
@@ -56,8 +105,10 @@ class SqliteService {
         name TEXT,
         model TEXT,
         specification TEXT,
+        category TEXT NOT NULL DEFAULT 'Mobile',
         stock INTEGER,
         unit_price INTEGER,
+        cost_price INTEGER NOT NULL DEFAULT 0,
         branch_id INTEGER
       )
     ''');
@@ -90,6 +141,7 @@ class SqliteService {
         quantity INTEGER,
         unit_price INTEGER,
         total INTEGER,
+        cost_total INTEGER NOT NULL DEFAULT 0,
         created_at TEXT,
         branch_id INTEGER
       )

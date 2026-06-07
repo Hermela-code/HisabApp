@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../navigation/logout.dart';
 import '../theme/app_colors.dart';
 
 // --- 1. THE SHARED HEADER ---
@@ -35,18 +38,17 @@ class HisabHeader extends StatelessWidget implements PreferredSizeWidget {
 }
 
 // --- 2. THE CASHIER SIDEBAR ---
-class CashierSidebar extends StatelessWidget {
+class CashierSidebar extends ConsumerWidget {
   const CashierSidebar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const Color sidebarBg = Color(0xFF0F172A);
 
     return Drawer(
       backgroundColor: sidebarBg,
       child: Column(
         children: [
-          // MINIMIZED HEADER SECTION
           Container(
             padding: const EdgeInsets.only(top: 50, left: 20, bottom: 20),
             decoration: const BoxDecoration(
@@ -58,7 +60,7 @@ class CashierSidebar extends StatelessWidget {
               mainAxisSize: MainAxisSize.max,
               children: [
                 const Icon(Icons.storefront, color: Colors.orange, size: 28),
-                const SizedBox(width: 10), // Tightened spacing
+                const SizedBox(width: 10),
                 Text(
                   'HisabApp',
                   style: TextStyle(
@@ -70,40 +72,47 @@ class CashierSidebar extends StatelessWidget {
               ],
             ),
           ),
-
-          // NAVIGATION ITEMS
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildMenuItem(context, Icons.grid_view, "Dashboard", '/cashier-dashboard'),
-                _buildMenuItem(context, Icons.inventory_2_outlined, "Inventory", '/cashier-inventory'),
-                _buildMenuItem(context, Icons.shopping_cart_outlined, "Record Sale", '/cashier-record-sale'),
-                _buildMenuItem(context, Icons.attach_money, "Daily Sales", '/cashier-daily-sales'),
-                _buildMenuItem(context, Icons.monetization_on_outlined, "Branch Costs", '/cashier-branch-cost'),
-                _buildMenuItem(context, Icons.ios_share_outlined, "Export / Archive", '/cashier-export-archive'),
-                _buildMenuItem(context, Icons.people_outline, "Staff", '/cashier-staff'),
-                _buildMenuItem(context, Icons.logout, "Logout", '/login'),
+                _buildMenuItem(context, ref, Icons.grid_view, 'Dashboard', '/cashier-dashboard'),
+                _buildMenuItem(context, ref, Icons.inventory_2_outlined, 'Inventory', '/cashier-inventory'),
+                _buildMenuItem(context, ref, Icons.shopping_cart_outlined, 'Record Sale', '/cashier-record-sale'),
+                _buildMenuItem(context, ref, Icons.attach_money, 'Daily Sales', '/cashier-daily-sales'),
+                _buildMenuItem(context, ref, Icons.monetization_on_outlined, 'Branch Costs', '/cashier-branch-cost'),
+                _buildMenuItem(context, ref, Icons.ios_share_outlined, 'Export / Archive', '/cashier-export-archive'),
+                _buildMenuItem(context, ref, Icons.people_outline, 'Staff', '/cashier-staff'),
+                _buildMenuItem(context, ref, Icons.logout, 'Logout', null, isLogout: true),
               ],
             ),
           ),
-
-          // SETTINGS AT BOTTOM
           const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-          _buildMenuItem(context, Icons.settings_outlined, "Settings", '/settings'),
+          _buildMenuItem(context, ref, Icons.settings_outlined, 'Settings', '/settings'),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String title, String? route) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    WidgetRef ref,
+    IconData icon,
+    String title,
+    String? route, {
+    bool isLogout = false,
+  }) {
     return ListTile(
       leading: Icon(icon, color: Colors.white, size: 22),
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
-      onTap: route == null ? null : () {
+      onTap: () {
         context.pop();
-        context.go(route);
+        if (isLogout) {
+          performLogout(context, ref);
+        } else if (route != null) {
+          context.go(route);
+        }
       },
     );
   }
@@ -123,21 +132,4 @@ class CashierLayout extends StatelessWidget {
       body: body,
     );
   }
-}
-
-// --- TESTING BLOCK ---
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: CashierLayout(
-        body: Center(
-          child: Text(
-            "Cashier Layout Ready\nClick the menu to see the sidebar",
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    ),
-  );
 }

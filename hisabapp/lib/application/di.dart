@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/repositories/app_repository.dart';
+import 'providers/session_provider.dart';
 import 'app_repository_factory.dart';
 import 'use_cases/auth/login_user_use_case.dart';
 import 'use_cases/auth/register_user_use_case.dart';
