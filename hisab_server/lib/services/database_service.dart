@@ -7,7 +7,7 @@ class DatabaseService {
       host: Platform.environment['DB_HOST'] ?? '127.0.0.1',
       port: int.tryParse(Platform.environment['DB_PORT'] ?? '3306') ?? 3306,
       user: Platform.environment['DB_USER'] ?? 'root',
-      password: Platform.environment['DB_PASSWORD'],
+      password: (Platform.environment['DB_PASSWORD'] == null || Platform.environment['DB_PASSWORD']!.isEmpty) ? null : Platform.environment['DB_PASSWORD'],
       db: Platform.environment['DB_NAME'] ?? 'hisab_app',
     );
     try {

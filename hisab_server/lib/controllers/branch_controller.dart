@@ -105,4 +105,79 @@ class BranchController {
       await conn.close();
     }
   }
+
+  Future<Response> updateBranch(Request request) async {
+    final db = DatabaseService();
+    final conn = await db.getConnection();
+    try {
+      final Map<String, dynamic> data = jsonDecode(await request.readAsString());
+      final int? branchId = int.tryParse(data['branch_id']?.toString() ?? data['id']?.toString() ?? '');
+      final String? name = data['branch_name'] ?? data['name'];
+      final String? location = data['location'];
+      final String? cashierName = data['cashier_name'] ?? data['cashier'];
+
+      if (branchId == null) {
+        return Response.badRequest(
+          body: jsonEncode({'status': 'error', 'message': 'branch_id is required'}),
+          headers: {'content-type': 'application/json'},
+        );
+      }
+
+      await conn.query(
+        '''
+        UPDATE branches 
+        SET name = COALESCE(?, name), 
+            location = COALESCE(?, location), 
+            cashier_name = COALESCE(?, cashier_name)
+        WHERE id = ?
+        ''',
+        [name, location, cashierName, branchId],
+      );
+
+      return Response.ok(
+        jsonEncode({'status': 'success', 'message': 'Branch updated successfully'}),
+        headers: {'content-type': 'application/json'},
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: jsonEncode({'status': 'error', 'message': e.toString()}),
+        headers: {'content-type': 'application/json'},
+      );
+    } finally {
+      await conn.close();
+    }
+  }
+
+  Future<Response> deleteBranch(Request request) async {
+    final db = DatabaseService();
+    final conn = await db.getConnection();
+    try {
+      final Map<String, dynamic> data = jsonDecode(await request.readAsString());
+      final int? branchId = int.tryParse(data['branch_id']?.toString() ?? data['id']?.toString() ?? '');
+
+      if (branchId == null) {
+        return Response.badRequest(
+          body: jsonEncode({'status': 'error', 'message': 'branch_id is required'}),
+          headers: {'content-type': 'application/json'},
+        );
+      }
+
+      await conn.query(
+        'DELETE FROM branches WHERE id = ?',
+        [branchId],
+      );
+
+      return Response.ok(
+        jsonEncode({'status': 'success', 'message': 'Branch deleted successfully'}),
+        headers: {'content-type': 'application/json'},
+      );
+    } catch (e) {
+      return Response.internalServerError(
+        body: jsonEncode({'status': 'error', 'message': e.toString()}),
+        headers: {'content-type': 'application/json'},
+      );
+    } finally {
+      await conn.close();
+    }
+  }
 }

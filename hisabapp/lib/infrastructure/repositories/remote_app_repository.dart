@@ -17,35 +17,32 @@ class RemoteAppRepository implements AppRepository {
       : _api = RemoteAppApi(client, baseUrl: baseUrl);
 
   @override
-  Future<void> addBranch(Branch branch) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> addBranch(Branch branch) => _api.addBranch(branch);
 
   @override
-  Future<void> addProduct(Product product) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> addProduct(Product product) => _api.addProduct(product);
 
   @override
-  Future<void> deleteProduct(int productId) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> deleteProduct(int productId) => _api.deleteProduct(productId);
 
   @override
-  Future<void> deleteStaff(int staffId) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> deleteStaff(int staffId) => _api.deleteStaff(staffId);
 
   @override
-  Future<void> addStaff(Staff staff) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> addStaff(Staff staff) => _api.addStaff(staff);
 
   @override
-  Future<void> addBranchCost(BranchCost cost) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> addBranchCost(BranchCost cost) => _api.addBranchCost(cost);
 
   @override
-  Future<void> deleteBranchCost(int costId) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> deleteBranchCost(int costId) => _api.deleteBranchCost(costId);
 
   @override
-  Future<void> addReport(Report report) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> addReport(Report report) => _api.generateSnapshot(report.branchId);
 
   @override
   Future<void> registerBusiness(String businessName, String businessType) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+      _api.registerBusiness(businessName, businessType);
 
   @override
   Future<List<Branch>> getBranches() => _api.fetchBranches();
@@ -55,10 +52,27 @@ class RemoteAppRepository implements AppRepository {
 
   @override
   Future<void> saveProductAttributes(List<String> attributes) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+      _api.saveProductAttributes(attributes, 1);
 
   @override
-  Future<void> recordSale(Sale sale) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> recordSale(Sale sale) async {
+    int staffId = 1;
+    try {
+      final staffList = await getStaff(sale.branchId);
+      final match = staffList.firstWhere(
+        (s) => s.name.toLowerCase().trim() == sale.salesperson.toLowerCase().trim(),
+      );
+      staffId = match.id;
+    } catch (_) {
+      try {
+        final staffList = await getStaff(sale.branchId);
+        if (staffList.isNotEmpty) {
+          staffId = staffList.first.id;
+        }
+      } catch (_) {}
+    }
+    await _api.recordSale(sale, staffId, 1);
+  }
 
   @override
   Future<List<Product>> getProducts(int branchId) => _api.fetchProducts(branchId);
@@ -79,9 +93,8 @@ class RemoteAppRepository implements AppRepository {
   Future<User?> login(String username, String password) => _api.login(username, password);
 
   @override
-  Future<void> markReportDeposited(int reportId) =>
-      throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> markReportDeposited(int reportId) => _api.markReportDeposited(reportId);
 
   @override
-  Future<void> signUp(User user) => throw UnimplementedError('Remote write operations are not supported by RemoteAppRepository');
+  Future<void> signUp(User user) => _api.signUp(user);
 }

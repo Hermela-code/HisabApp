@@ -34,6 +34,8 @@ void main() async {
     ..post('/get-branches', branchCtrl.getCompanyBranches)
     ..get('/branches', branchCtrl.getCompanyBranches) // Added GET endpoint
     ..post('/add-branch', branchCtrl.addBranch)
+    ..put('/branches', branchCtrl.updateBranch)
+    ..delete('/branches', branchCtrl.deleteBranch)
 
     // --- Product & Attributes Setup ---
     ..get('/product-attributes', settingsCtrl.getProductAttributes) // Added GET endpoint

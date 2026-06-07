@@ -11,7 +11,7 @@ import '../../domain/entities/staff.dart';
 import '../../domain/entities/user.dart';
 
 class RemoteAppApi {
-  static const String defaultBaseUrl = 'https://api.hisabapp.example.com';
+  static const String defaultBaseUrl = 'http://localhost:8080';
 
   final String baseUrl;
   final http.Client _client;
@@ -22,7 +22,7 @@ class RemoteAppApi {
 
   void _validateResponse(http.Response response) {
     if (response.statusCode != 200) {
-      throw http.ClientException('Remote API error: ${response.statusCode}', response.request?.url);
+      throw http.ClientException('Remote API error: ${response.statusCode} - ${response.body}', response.request?.url);
     }
   }
 
@@ -160,4 +160,182 @@ class RemoteAppApi {
         companyId: json['company_id'] as int,
         branchId: json['branch_id'] as int?,
       );
+
+  Future<void> registerBusiness(String businessName, String businessType) async {
+    final response = await _client.post(
+      _uri('/register-business'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'business_name': businessName,
+        'business_type': businessType,
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> signUp(User user) async {
+    final response = await _client.post(
+      _uri('/signup'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': user.id,
+        'username': user.username,
+        'password': user.password,
+        'role': user.role == UserRole.cashier ? 'cashier' : 'owner',
+        'company_id': user.companyId,
+        'branch_id': user.branchId,
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> addBranch(Branch branch) async {
+    final response = await _client.post(
+      _uri('/add-branch'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': branch.id,
+        'branch_id': branch.id,
+        'company_id': branch.companyId,
+        'branch_name': branch.name,
+        'location': branch.location,
+        'cashier_name': branch.cashier,
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> addProduct(Product product) async {
+    final response = await _client.post(
+      _uri('/add-product'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': product.id,
+        'product_id': product.id,
+        'branch_id': product.branchId,
+        'product_name': product.name,
+        'brand': product.model,
+        'category': product.category,
+        'specification': product.specification,
+        'selling_price': product.unitPrice,
+        'cost_price': product.costPrice,
+        'total_stock': product.stock,
+        'low_stock_alert': 5,
+        'high_stock_alert': 10,
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> deleteProduct(int productId) async {
+    final response = await _client.delete(
+      _uri('/delete-product'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'product_id': productId}),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> addStaff(Staff staff) async {
+    final response = await _client.post(
+      _uri('/add-staff'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': staff.id,
+        'staff_id': staff.id,
+        'branch_id': staff.branchId,
+        'name': staff.name,
+        'phone_number': staff.phone,
+        'role': 'Staff',
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> deleteStaff(int staffId) async {
+    final response = await _client.delete(
+      _uri('/delete-staff'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'staff_id': staffId}),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> addBranchCost(BranchCost cost) async {
+    final response = await _client.post(
+      _uri('/add-branch-cost'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': cost.id,
+        'cost_id': cost.id,
+        'branch_id': cost.branchId,
+        'description': cost.title,
+        'amount': cost.amount,
+        'expense_date': cost.createdAt.toIso8601String().split('T').first,
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> deleteBranchCost(int costId) async {
+    final response = await _client.delete(
+      _uri('/delete-branch-cost'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'cost_id': costId}),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> recordSale(Sale sale, int staffId, int userId) async {
+    final response = await _client.post(
+      _uri('/record-sale'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id': sale.id,
+        'sale_id': sale.id,
+        'branch_id': sale.branchId,
+        'user_id': userId,
+        'staff_id': staffId,
+        'total_amount': sale.total,
+        'items': [
+          {
+            'product_id': sale.productId,
+            'quantity': sale.quantity,
+            'price': sale.unitPrice,
+            'cost': sale.quantity > 0 ? (sale.costTotal ~/ sale.quantity) : 0,
+          }
+        ]
+      }),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> generateSnapshot(int branchId) async {
+    final response = await _client.post(
+      _uri('/generate-daily-snapshot'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'branch_id': branchId}),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> markReportDeposited(int reportId) async {
+    final response = await _client.patch(
+      _uri('/mark-as-deposited?id=$reportId'),
+    );
+    _validateResponse(response);
+  }
+
+  Future<void> saveProductAttributes(List<String> attributes, int companyId) async {
+    final response = await _client.post(
+      _uri('/setup/define-attributes'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'company_id': companyId,
+        'attributes': attributes,
+      }),
+    );
+    _validateResponse(response);
+  }
 }
+

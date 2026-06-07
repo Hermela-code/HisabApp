@@ -16,12 +16,8 @@ class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-<<<<<<< HEAD
-  Widget build(BuildContext context) {
-=======
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
->>>>>>> 59d55fcba04bce7f95ca55415c0a89b7836e322e
     return MaterialApp.router(
       routerConfig: router,
       title: 'HisabApp',

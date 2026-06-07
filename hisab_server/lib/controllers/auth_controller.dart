@@ -53,40 +53,50 @@ class AuthController {
       final String? username = data['username'];
       final String? password = data['password'];
       final String? role = data['role'];
-      final int? companyId = int.tryParse(data['company_id'].toString());
 
       if (username == null || username.isEmpty ||
           password == null || password.isEmpty ||
-          role == null || companyId == null) {
+          role == null) {
         return Response.badRequest(
-          body: jsonEncode({'status': 'error', 'message': 'username, password, role, and company_id are required'}),
+          body: jsonEncode({'status': 'error', 'message': 'username, password, and role are required'}),
           headers: {'content-type': 'application/json'},
         );
       }
 
-      int? branchId;
-      if (role == 'cashier' || role == 'Cashier') {
-        var branchResults = await conn.query(
-          'SELECT id FROM branches WHERE LOWER(cashier_name) = ?',
-          [username.toLowerCase().trim()],
+      await conn.transaction((ctx) async {
+        // Query A: Insert a new default company
+        final String companyName = data['company_name'] ?? data['business_name'] ?? 'My Business';
+        final String businessType = data['business_type'] ?? 'General';
+        final companyResult = await ctx.query(
+          'INSERT INTO companies (company_name, business_type) VALUES (?, ?)',
+          [companyName, businessType],
         );
-        if (branchResults.isNotEmpty) {
-          branchId = branchResults.first[0];
-        }
-      }
+        final int companyId = companyResult.insertId!;
 
-      final int? providedId = data['user_id'] ?? data['id'];
-      if (providedId != null) {
-        await conn.query(
-          'INSERT INTO users (id, username, password, role, company_id, branch_id) VALUES (?, ?, ?, ?, ?, ?)',
-          [providedId, username, _hash(password), role, companyId, branchId],
+        // Query B: Insert a new default branch using the companyId
+        final String branchName = data['branch_name'] ?? 'Main Branch';
+        final String location = data['location'] ?? 'Unknown';
+        final String cashierName = (role == 'cashier' || role == 'Cashier') ? username : 'Not Assigned';
+        final branchResult = await ctx.query(
+          'INSERT INTO branches (company_id, name, location, cashier_name) VALUES (?, ?, ?, ?)',
+          [companyId, branchName, location, cashierName],
         );
-      } else {
-        await conn.query(
-          'INSERT INTO users (username, password, role, company_id, branch_id) VALUES (?, ?, ?, ?, ?)',
-          [username, _hash(password), role, companyId, branchId],
-        );
-      }
+        final int branchId = branchResult.insertId!;
+
+        // Query C: Insert the new user using the companyId and branchId
+        final int? providedId = data['user_id'] ?? data['id'];
+        if (providedId != null) {
+          await ctx.query(
+            'INSERT INTO users (id, username, password, role, company_id, branch_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [providedId, username, _hash(password), role, companyId, branchId],
+          );
+        } else {
+          await ctx.query(
+            'INSERT INTO users (username, password, role, company_id, branch_id) VALUES (?, ?, ?, ?, ?)',
+            [username, _hash(password), role, companyId, branchId],
+          );
+        }
+      });
 
       return Response.ok(
         jsonEncode({'status': 'success', 'message': 'Account successfully created!'}),
