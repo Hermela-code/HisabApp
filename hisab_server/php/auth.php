@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/jwt_helper.php';
 
 header('Content-Type: application/json');
 
@@ -76,8 +77,10 @@ if ($action === 'signup') {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password'])) {
+            $token = generate_jwt($user['id'], $user['role'], $user['company_id'], $user['branch_id']);
             echo json_encode([
                 'success' => true,
+                'token' => $token,
                 'role' => $user['role'],
                 'name' => $user['name'],
                 'company_id' => $user['company_id'],

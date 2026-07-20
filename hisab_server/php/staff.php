@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/jwt_helper.php';
 
 header('Content-Type: application/json');
 
@@ -11,14 +12,36 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true);
 
+$headers = function_exists('apache_request_headers') ? apache_request_headers() : [];
+$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+
+if (empty($authHeader) || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized: Missing or invalid Bearer token']);
+    exit;
+}
+
+$token = $matches[1];
+$payload = verify_jwt($token);
+
+if (!$payload) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: Invalid or expired token']);
+    exit;
+}
+
+if (!isset($payload['role']) || $payload['role'] !== 'Owner') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: Only Owners can provision cashiers']);
+    exit;
+}
+
 if (!isset($input['action']) || $input['action'] !== 'create_cashier') {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid action']);
     exit;
 }
 
-// TODO(security): This endpoint accepts 'owner_company_id' without verifying an auth session.
-// This is an insecure authorization pattern that must be secured before production deployment.
 $ownerCompanyId = $input['owner_company_id'] ?? null;
 $branchId = $input['branch_id'] ?? null;
 $cashierName = $input['cashier_name'] ?? null;
