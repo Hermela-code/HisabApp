@@ -1,7 +1,5 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../../domain/entities/branch.dart';
 import '../../domain/entities/branch_cost.dart';
 import '../../domain/entities/product.dart';
@@ -11,7 +9,7 @@ import '../../domain/entities/staff.dart';
 import '../../domain/entities/user.dart';
 
 class RemoteAppApi {
-  static const String defaultBaseUrl = 'http://localhost:8080';
+  static const String defaultBaseUrl = 'http://localhost:8000';
 
   final String baseUrl;
   final http.Client _client;
@@ -27,64 +25,89 @@ class RemoteAppApi {
   }
 
   Future<List<Branch>> fetchBranches() async {
-    final response = await _client.get(_uri('/branches'));
+    final response = await _client.post(
+      _uri('/branch.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'get_branches'}),
+    );
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _branchFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['branches'] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _branchFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<String>> fetchProductAttributes() async {
-    final response = await _client.get(_uri('/product-attributes'));
+    final response = await _client.post(
+      _uri('/products.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'get_attributes'}),
+    );
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) {
+    final data = jsonDecode(response.body);
+    final list = data is Map ? (data['attributes'] ?? []) as List<dynamic> : data as List<dynamic>;
+    return list.map((item) {
       if (item is String) return item;
       return item['name'] as String;
     }).toList();
   }
 
   Future<List<Product>> fetchProducts(int branchId) async {
-    final path = branchId == 0 ? '/products' : '/branches/$branchId/products';
-    final response = await _client.get(_uri(path));
+    final response = await _client.post(
+      _uri('/products.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'get_products', 'branch_id': branchId}),
+    );
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _productFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['products'] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _productFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<Staff>> fetchStaff(int branchId) async {
-    final path = branchId == 0 ? '/staff' : '/branches/$branchId/staff';
-    final response = await _client.get(_uri(path));
+    final response = await _client.post(
+      _uri('/staff.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'get_staff', 'branch_id': branchId}),
+    );
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _staffFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['staff'] ?? data['data'] ?? [] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _staffFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<BranchCost>> fetchBranchCosts(int branchId) async {
-    final response = await _client.get(_uri('/branches/$branchId/costs'));
+    final response = await _client.post(
+      _uri('/branch.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'action': 'get_branch_costs', 'branch_id': branchId}),
+    );
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _branchCostFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['costs'] ?? data['data'] ?? [] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _branchCostFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<Sale>> fetchSales(int branchId) async {
-    final response = await _client.get(_uri('/branches/$branchId/sales'));
+    final response = await _client.get(_uri('/sales.php?action=get_sales&branch_id=$branchId'));
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _saleFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['data'] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _saleFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<Report>> fetchReports() async {
-    final response = await _client.get(_uri('/reports'));
+    final response = await _client.get(_uri('/sales.php?action=get_reports'));
     _validateResponse(response);
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data.map((item) => _reportFromJson(item as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['data'] as List<dynamic> : data as List<dynamic>;
+    return list.map((item) => _reportFromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<User?> login(String username, String password) async {
     final response = await _client.post(
-      _uri('/auth/login'),
+      _uri('/auth.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'username': username, 'password': password}),
+      body: jsonEncode({'action': 'login', 'username': username, 'password': password}),
     );
 
     if (response.statusCode == 401 || response.statusCode == 404) {
@@ -96,22 +119,22 @@ class RemoteAppApi {
 
   Branch _branchFromJson(Map<String, dynamic> json) => Branch(
         id: json['id'] as int,
-        name: json['name'] as String,
+        name: json['name'] ?? json['branch_name'] as String? ?? '',
         companyId: json['company_id'] as int,
         location: json['location'] as String? ?? '',
-        cashier: json['cashier'] as String? ?? '',
+        cashier: json['cashier_name'] ?? json['cashier'] as String? ?? '',
       );
 
   Product _productFromJson(Map<String, dynamic> json) => Product(
         id: json['id'] as int,
-        name: json['name'] as String,
-        model: json['model'] as String,
-        specification: json['specification'] as String,
+        name: json['name'] as String? ?? '',
+        model: json['brand'] ?? json['model'] as String? ?? '',
+        specification: json['specification'] as String? ?? '',
         category: json['category'] as String? ?? ProductCategories.mobile,
-        stock: json['stock'] as int,
-        unitPrice: json['unit_price'] as int,
+        stock: json['current_stock'] ?? json['stock'] ?? json['units'] as int? ?? 0,
+        unitPrice: json['selling_price'] ?? json['unit_price'] as int? ?? 0,
         costPrice: json['cost_price'] as int? ?? json['costPrice'] as int? ?? 0,
-        branchId: json['branch_id'] as int,
+        branchId: json['branch_id'] as int? ?? 0,
       );
 
   Staff _staffFromJson(Map<String, dynamic> json) => Staff(
@@ -134,9 +157,9 @@ class RemoteAppApi {
         productName: json['product_name'] as String,
         salesperson: json['salesperson'] as String,
         quantity: json['quantity'] as int,
-        unitPrice: json['unit_price'] as int,
-        total: json['total'] as int,
-        costTotal: json['cost_total'] as int? ?? json['costTotal'] as int? ?? 0,
+        unitPrice: (json['unit_price'] as num).toInt(),
+        total: (json['total'] as num).toInt(),
+        costTotal: json['cost_total'] != null ? (json['cost_total'] as num).toInt() : (json['costTotal'] != null ? (json['costTotal'] as num).toInt() : 0),
         createdAt: DateTime.parse(json['created_at'] as String),
         branchId: json['branch_id'] as int,
       );
@@ -144,28 +167,29 @@ class RemoteAppApi {
   Report _reportFromJson(Map<String, dynamic> json) => Report(
         id: json['id'] as int,
         branchId: json['branch_id'] as int,
-        date: json['date'] as String,
-        totalAmount: json['total_amount'] as int,
-        totalUnits: json['total_units'] as int,
-        totalProducts: json['total_products'] as int,
-        totalCost: json['total_cost'] as int,
-        isDeposited: (json['is_deposited'] as int) == 1,
+        date: json['date'] ?? json['report_date'] as String? ?? '',
+        totalAmount: json['total_amount'] != null ? (json['total_amount'] as num).toInt() : 0,
+        totalUnits: json['total_units'] != null ? (json['total_units'] as num).toInt() : 0,
+        totalProducts: json['total_products'] != null ? (json['total_products'] as num).toInt() : 0,
+        totalCost: json['total_cost'] != null ? (json['total_cost'] as num).toInt() : 0,
+        isDeposited: (json['is_deposited'] as int? ?? 0) == 1,
       );
 
   User _userFromJson(Map<String, dynamic> json) => User(
-        id: json['id'] as int,
-        username: json['username'] as String,
-        password: json['password'] as String,
-        role: json['role'] == 'cashier' ? UserRole.cashier : UserRole.owner,
-        companyId: json['company_id'] as int,
+        id: json['id'] ?? 0 as int,
+        username: json['name'] ?? json['username'] as String? ?? '',
+        password: json['password'] as String? ?? '',
+        role: json['role'] == 'Cashier' || json['role'] == 'cashier' ? UserRole.cashier : UserRole.owner,
+        companyId: json['company_id'] as int? ?? 0,
         branchId: json['branch_id'] as int?,
       );
 
   Future<void> registerBusiness(String businessName, String businessType) async {
     final response = await _client.post(
-      _uri('/register-business'),
+      _uri('/auth.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'register_business',
         'business_name': businessName,
         'business_type': businessType,
       }),
@@ -175,9 +199,10 @@ class RemoteAppApi {
 
   Future<void> signUp(User user) async {
     final response = await _client.post(
-      _uri('/signup'),
+      _uri('/auth.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'signup',
         'id': user.id,
         'username': user.username,
         'password': user.password,
@@ -191,9 +216,10 @@ class RemoteAppApi {
 
   Future<void> addBranch(Branch branch) async {
     final response = await _client.post(
-      _uri('/add-branch'),
+      _uri('/branch.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'create_branch',
         'id': branch.id,
         'branch_id': branch.id,
         'company_id': branch.companyId,
@@ -207,9 +233,10 @@ class RemoteAppApi {
 
   Future<void> addProduct(Product product) async {
     final response = await _client.post(
-      _uri('/add-product'),
+      _uri('/products.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'create_product',
         'id': product.id,
         'product_id': product.id,
         'branch_id': product.branchId,
@@ -228,19 +255,20 @@ class RemoteAppApi {
   }
 
   Future<void> deleteProduct(int productId) async {
-    final response = await _client.delete(
-      _uri('/delete-product'),
+    final response = await _client.post(
+      _uri('/products.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'product_id': productId}),
+      body: jsonEncode({'action': 'delete_product', 'product_id': productId}),
     );
     _validateResponse(response);
   }
 
   Future<void> addStaff(Staff staff) async {
     final response = await _client.post(
-      _uri('/add-staff'),
+      _uri('/staff.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'create_cashier',
         'id': staff.id,
         'staff_id': staff.id,
         'branch_id': staff.branchId,
@@ -253,19 +281,20 @@ class RemoteAppApi {
   }
 
   Future<void> deleteStaff(int staffId) async {
-    final response = await _client.delete(
-      _uri('/delete-staff'),
+    final response = await _client.post(
+      _uri('/staff.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'staff_id': staffId}),
+      body: jsonEncode({'action': 'delete_staff', 'staff_id': staffId}),
     );
     _validateResponse(response);
   }
 
   Future<void> addBranchCost(BranchCost cost) async {
     final response = await _client.post(
-      _uri('/add-branch-cost'),
+      _uri('/branch.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'add_branch_cost',
         'id': cost.id,
         'cost_id': cost.id,
         'branch_id': cost.branchId,
@@ -278,41 +307,43 @@ class RemoteAppApi {
   }
 
   Future<void> deleteBranchCost(int costId) async {
-    final response = await _client.delete(
-      _uri('/delete-branch-cost'),
+    final response = await _client.post(
+      _uri('/branch.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'cost_id': costId}),
+      body: jsonEncode({'action': 'delete_branch_cost', 'cost_id': costId}),
     );
     _validateResponse(response);
   }
 
   Future<void> recordSale(Sale sale, int staffId, int userId) async {
     final response = await _client.post(
-      _uri('/record-sale'),
+      _uri('/sales.php?action=sync_sales'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'id': sale.id,
-        'sale_id': sale.id,
-        'branch_id': sale.branchId,
-        'user_id': userId,
-        'staff_id': staffId,
-        'total_amount': sale.total,
-        'items': [
-          {
-            'product_id': sale.productId,
-            'quantity': sale.quantity,
-            'price': sale.unitPrice,
-            'cost': sale.quantity > 0 ? (sale.costTotal ~/ sale.quantity) : 0,
-          }
-        ]
-      }),
+      body: jsonEncode([
+        {
+          'id': sale.id,
+          'sale_id': sale.id,
+          'branch_id': sale.branchId,
+          'user_id': userId,
+          'staff_id': staffId,
+          'total_amount': sale.total,
+          'items': [
+            {
+              'product_id': sale.productId,
+              'quantity': sale.quantity,
+              'price': sale.unitPrice,
+              'cost': sale.quantity > 0 ? (sale.costTotal ~/ sale.quantity) : 0,
+            }
+          ]
+        }
+      ]),
     );
     _validateResponse(response);
   }
 
   Future<void> generateSnapshot(int branchId) async {
     final response = await _client.post(
-      _uri('/generate-daily-snapshot'),
+      _uri('/sales.php?action=generate_daily_snapshot'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'branch_id': branchId}),
     );
@@ -320,17 +351,20 @@ class RemoteAppApi {
   }
 
   Future<void> markReportDeposited(int reportId) async {
-    final response = await _client.patch(
-      _uri('/mark-as-deposited?id=$reportId'),
+    final response = await _client.post(
+      _uri('/sales.php?action=mark_as_deposited'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id': reportId}),
     );
     _validateResponse(response);
   }
 
   Future<void> saveProductAttributes(List<String> attributes, int companyId) async {
     final response = await _client.post(
-      _uri('/setup/define-attributes'),
+      _uri('/products.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'action': 'define_attributes',
         'company_id': companyId,
         'attributes': attributes,
       }),
@@ -338,4 +372,3 @@ class RemoteAppApi {
     _validateResponse(response);
   }
 }
-
