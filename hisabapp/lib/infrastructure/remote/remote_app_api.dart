@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/branch.dart';
 import '../../domain/entities/branch_cost.dart';
 import '../../domain/entities/product.dart';
@@ -13,10 +14,27 @@ class RemoteAppApi {
 
   final String baseUrl;
   final http.Client _client;
+  String? _token;
 
   RemoteAppApi(this._client, {this.baseUrl = defaultBaseUrl});
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
+
+  Future<Map<String, String>> _getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? prefs.getString('auth_token') ?? _token ?? '';
+
+    if (token.isEmpty) {
+      print('🚨 WARNING: Token is empty or null in SharedPreferences!');
+    } else {
+      print('✅ INJECTING TOKEN: $token');
+    }
+
+    return {
+      'Content-Type': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
 
   void _validateResponse(http.Response response) {
     if (response.statusCode != 200) {
@@ -27,7 +45,7 @@ class RemoteAppApi {
   Future<List<Branch>> fetchBranches() async {
     final response = await _client.post(
       _uri('/branch.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'get_branches'}),
     );
     _validateResponse(response);
@@ -39,7 +57,7 @@ class RemoteAppApi {
   Future<List<String>> fetchProductAttributes() async {
     final response = await _client.post(
       _uri('/products.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'get_attributes'}),
     );
     _validateResponse(response);
@@ -54,7 +72,7 @@ class RemoteAppApi {
   Future<List<Product>> fetchProducts(int branchId) async {
     final response = await _client.post(
       _uri('/products.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'get_products', 'branch_id': branchId}),
     );
     _validateResponse(response);
@@ -66,7 +84,7 @@ class RemoteAppApi {
   Future<List<Staff>> fetchStaff(int branchId) async {
     final response = await _client.post(
       _uri('/staff.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'get_staff', 'branch_id': branchId}),
     );
     _validateResponse(response);
@@ -78,7 +96,7 @@ class RemoteAppApi {
   Future<List<BranchCost>> fetchBranchCosts(int branchId) async {
     final response = await _client.post(
       _uri('/branch.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'get_branch_costs', 'branch_id': branchId}),
     );
     _validateResponse(response);
@@ -88,7 +106,10 @@ class RemoteAppApi {
   }
 
   Future<List<Sale>> fetchSales(int branchId) async {
-    final response = await _client.get(_uri('/sales.php?action=get_sales&branch_id=$branchId'));
+    final response = await _client.get(
+      _uri('/sales.php?action=get_sales&branch_id=$branchId'),
+      headers: await _getHeaders(),
+    );
     _validateResponse(response);
     final data = jsonDecode(response.body);
     final list = data is Map ? data['data'] as List<dynamic> : data as List<dynamic>;
@@ -96,7 +117,10 @@ class RemoteAppApi {
   }
 
   Future<List<Report>> fetchReports() async {
-    final response = await _client.get(_uri('/sales.php?action=get_reports'));
+    final response = await _client.get(
+      _uri('/sales.php?action=get_reports'),
+      headers: await _getHeaders(),
+    );
     _validateResponse(response);
     final data = jsonDecode(response.body);
     final list = data is Map ? data['data'] as List<dynamic> : data as List<dynamic>;
@@ -106,7 +130,7 @@ class RemoteAppApi {
   Future<User?> login(String username, String password) async {
     final response = await _client.post(
       _uri('/auth.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'login', 'username': username, 'password': password}),
     );
 
@@ -114,7 +138,14 @@ class RemoteAppApi {
       return null;
     }
     _validateResponse(response);
-    return _userFromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    _token = data['token'] as String?;
+    if (_token != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', _token!);
+      await prefs.setString('auth_token', _token!);
+    }
+    return _userFromJson(data);
   }
 
   Branch _branchFromJson(Map<String, dynamic> json) => Branch(
@@ -187,7 +218,7 @@ class RemoteAppApi {
   Future<void> registerBusiness(String businessName, String businessType) async {
     final response = await _client.post(
       _uri('/auth.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'register_business',
         'business_name': businessName,
@@ -200,7 +231,7 @@ class RemoteAppApi {
   Future<void> signUp(User user) async {
     final response = await _client.post(
       _uri('/auth.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'signup',
         'id': user.id,
@@ -217,7 +248,7 @@ class RemoteAppApi {
   Future<void> addBranch(Branch branch) async {
     final response = await _client.post(
       _uri('/branch.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'create_branch',
         'id': branch.id,
@@ -234,7 +265,7 @@ class RemoteAppApi {
   Future<void> addProduct(Product product) async {
     final response = await _client.post(
       _uri('/products.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'create_product',
         'id': product.id,
@@ -257,7 +288,7 @@ class RemoteAppApi {
   Future<void> deleteProduct(int productId) async {
     final response = await _client.post(
       _uri('/products.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'delete_product', 'product_id': productId}),
     );
     _validateResponse(response);
@@ -266,7 +297,7 @@ class RemoteAppApi {
   Future<void> addStaff(Staff staff) async {
     final response = await _client.post(
       _uri('/staff.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'create_cashier',
         'id': staff.id,
@@ -283,7 +314,7 @@ class RemoteAppApi {
   Future<void> deleteStaff(int staffId) async {
     final response = await _client.post(
       _uri('/staff.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'delete_staff', 'staff_id': staffId}),
     );
     _validateResponse(response);
@@ -292,7 +323,7 @@ class RemoteAppApi {
   Future<void> addBranchCost(BranchCost cost) async {
     final response = await _client.post(
       _uri('/branch.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'add_branch_cost',
         'id': cost.id,
@@ -309,7 +340,7 @@ class RemoteAppApi {
   Future<void> deleteBranchCost(int costId) async {
     final response = await _client.post(
       _uri('/branch.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'action': 'delete_branch_cost', 'cost_id': costId}),
     );
     _validateResponse(response);
@@ -318,7 +349,7 @@ class RemoteAppApi {
   Future<void> recordSale(Sale sale, int staffId, int userId) async {
     final response = await _client.post(
       _uri('/sales.php?action=sync_sales'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode([
         {
           'id': sale.id,
@@ -344,7 +375,7 @@ class RemoteAppApi {
   Future<void> generateSnapshot(int branchId) async {
     final response = await _client.post(
       _uri('/sales.php?action=generate_daily_snapshot'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'branch_id': branchId}),
     );
     _validateResponse(response);
@@ -353,7 +384,7 @@ class RemoteAppApi {
   Future<void> markReportDeposited(int reportId) async {
     final response = await _client.post(
       _uri('/sales.php?action=mark_as_deposited'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({'id': reportId}),
     );
     _validateResponse(response);
@@ -362,7 +393,7 @@ class RemoteAppApi {
   Future<void> saveProductAttributes(List<String> attributes, int companyId) async {
     final response = await _client.post(
       _uri('/products.php'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'action': 'define_attributes',
         'company_id': companyId,

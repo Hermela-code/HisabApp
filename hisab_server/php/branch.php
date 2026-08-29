@@ -2,6 +2,20 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/jwt_helper.php';
 
+// Security: Dynamically check and allow trusted origins (localhost for development)
+// rather than using a wildcard (*) which is forbidden by secure coding guidelines.
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin) || preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
+    header("Access-Control-Allow-Origin: $origin");
+}
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 header('Content-Type: application/json');
 // Security: Restrict to POST only; reject all other methods.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -12,28 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // ---------------------------------------------------------------------------
 // Step 1: Extract and validate the Bearer token from the Authorization header.
-// We check apache_request_headers() first (Apache mod_php), then fall back to
-// $_SERVER['HTTP_AUTHORIZATION'] (Nginx / PHP-FPM / CLI).
 // ---------------------------------------------------------------------------
-$headers = function_exists('apache_request_headers') ? apache_request_headers() : [];
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-
-if (empty($authHeader) || !preg_match('/^Bearer\s(\S+)$/', $authHeader, $matches)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized: Missing or invalid Bearer token']);
-    exit;
-}
+$token = get_bearer_token();
 
 // ---------------------------------------------------------------------------
 // Step 2: Verify the token signature and expiry using verify_jwt().
 // Returns the decoded payload array on success, or false on failure.
 // ---------------------------------------------------------------------------
-$token = $matches[1];
 $payload = verify_jwt($token);
 
 if ($payload === false) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden: Invalid or expired token']);
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized: Invalid or expired token']);
     exit;
 }
 
@@ -103,56 +107,42 @@ switch ($action) {
         break;
 
     // -----------------------------------------------------------------------
-    // ACTION: create_branch
+    // ACTION: addBranch / create_branch
     // Security: Restricted to role 'Owner' only.
     // company_id is bound from JWT — body-supplied company_id is ignored.
     // -----------------------------------------------------------------------
+    case 'addBranch':
     case 'create_branch':
         // RBAC enforcement: Only Owners may create branches.
-        if ($jwtRole !== 'Owner') {
+        if (strtolower($jwtRole ?? '') !== 'owner') {
             http_response_code(403);
             echo json_encode(['error' => 'Forbidden: Only Owners can create branches']);
             exit;
         }
 
-        $branchName  = isset($input['branch_name']) ? trim($input['branch_name']) : null;
-        $location    = isset($input['location'])    ? trim($input['location'])    : 'Unknown';
-        $cashierName = isset($input['cashier_name'])? trim($input['cashier_name']): 'Not Assigned';
-
-        if (!$branchName) {
+        $branchName = $input['name'] ?? $input['branch_name'] ?? null;
+        if (is_string($branchName)) {
+            $branchName = trim($branchName);
+        }
+        if (empty($branchName)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Missing required field: branch_name']);
+            echo json_encode(['status' => 'error', 'message' => 'Branch name is required']);
             exit;
         }
 
+        $location = isset($input['location']) && trim($input['location']) !== '' ? trim($input['location']) : 'Unknown';
+        $cashierName = isset($input['cashier_name']) && trim($input['cashier_name']) !== '' ? trim($input['cashier_name']) : (isset($input['cashier']) && trim($input['cashier']) !== '' ? trim($input['cashier']) : 'Not Assigned');
+
         try {
-            // An explicit branch_id may be provided (e.g., for data migration).
-            // company_id always comes from the JWT, not the body.
-            if (!empty($input['branch_id'])) {
-                $providedBranchId = (int) $input['branch_id'];
-                $stmt = $pdo->prepare(
-                    'INSERT INTO branches (id, company_id, name, location, cashier_name)
-                     VALUES (:id, :company_id, :name, :location, :cashier_name)'
-                );
-                $stmt->execute([
-                    ':id'          => $providedBranchId,
-                    ':company_id'  => $jwtCompanyId,
-                    ':name'        => $branchName,
-                    ':location'    => $location,
-                    ':cashier_name'=> $cashierName,
-                ]);
-            } else {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO branches (company_id, name, location, cashier_name)
-                     VALUES (:company_id, :name, :location, :cashier_name)'
-                );
-                $stmt->execute([
-                    ':company_id'  => $jwtCompanyId,
-                    ':name'        => $branchName,
-                    ':location'    => $location,
-                    ':cashier_name'=> $cashierName,
-                ]);
-            }
+            $stmt = $pdo->prepare(
+                'INSERT INTO branches (company_id, name, location, cashier_name) VALUES (:company_id, :name, :location, :cashier_name)'
+            );
+            $stmt->execute([
+                ':company_id'   => $jwtCompanyId,
+                ':name'         => $branchName,
+                ':location'     => $location,
+                ':cashier_name' => $cashierName,
+            ]);
 
             $newId = $pdo->lastInsertId();
             echo json_encode([
@@ -163,7 +153,7 @@ switch ($action) {
         } catch (PDOException $e) {
             error_log('Branch create_branch DB Error: ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['error' => 'Internal Server Error']);
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
         break;
 

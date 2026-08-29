@@ -43,6 +43,7 @@ dependencies:
   path_provider_linux: ^2.2.1
   path_provider_windows: ^2.3.0
   path: ^1.8.3
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

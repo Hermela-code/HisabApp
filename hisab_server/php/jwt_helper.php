@@ -110,3 +110,21 @@ function verify_jwt($token) {
 
     return $payload;
 }
+
+function get_bearer_token() {
+    $authHeader = null;
+    if (isset($_SERVER['Authorization'])) { $authHeader = trim($_SERVER['Authorization']); }
+    else if (isset($_SERVER['HTTP_AUTHORIZATION'])) { $authHeader = trim($_SERVER['HTTP_AUTHORIZATION']); }
+    else if (function_exists('apache_request_headers')) {
+        $requestHeaders = apache_request_headers();
+        if (isset($requestHeaders['Authorization'])) { $authHeader = trim($requestHeaders['Authorization']); }
+    }
+
+    if ($authHeader === null || !preg_match('/^Bearer\s(\S+)$/', $authHeader, $matches)) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Token missing or malformed']);
+        exit;
+    }
+
+    return $matches[1];
+}
