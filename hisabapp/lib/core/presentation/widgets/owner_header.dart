@@ -75,6 +75,7 @@ class OwnerSidebar extends ConsumerWidget {
               children: [
                 _buildMenuItem(context, ref, Icons.grid_view, 'Dashboard', '/owner-dashboard'),
                 _buildMenuItem(context, ref, Icons.business_outlined, 'Branches', '/owner-branches'),
+                _buildMenuItem(context, ref, Icons.list_alt, 'Attributes', '/owner/manage-attributes'),
                 _buildMenuItem(context, ref, Icons.ios_share_outlined, 'Exports', '/owner-exports'),
                 _buildMenuItem(context, ref, Icons.logout, 'Logout', null, isLogout: true),
               ],

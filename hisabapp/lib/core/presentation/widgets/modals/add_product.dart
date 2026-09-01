@@ -29,7 +29,6 @@ class AddProductView extends StatefulWidget {
 class _AddProductViewState extends State<AddProductView> {
   String _selectedCategory = ProductCategories.mobile;
   final _nameController = TextEditingController();
-  final _modelController = TextEditingController();
   
   bool _loading = true;
   final Map<String, TextEditingController> dynamicControllers = {};
@@ -46,6 +45,7 @@ class _AddProductViewState extends State<AddProductView> {
       if (!mounted) return;
       setState(() {
         for (var attr in saved) {
+          if (attr.trim().toLowerCase() == 'product name') continue;
           dynamicControllers[attr] = TextEditingController();
         }
         _loading = false;
@@ -58,7 +58,6 @@ class _AddProductViewState extends State<AddProductView> {
   @override
   void dispose() {
     _nameController.dispose();
-    _modelController.dispose();
     _sellingPriceController.dispose();
     _costPriceController.dispose();
     _totalStockController.dispose();
@@ -139,10 +138,6 @@ class _AddProductViewState extends State<AddProductView> {
 
               _buildLabel('Product Name'),
               _buildTextField(_nameController),
-              const SizedBox(height: 10),
-
-              _buildLabel('Model'),
-              _buildTextField(_modelController),
               const SizedBox(height: 10),
 
               if (_loading)
@@ -260,7 +255,7 @@ class _AddProductViewState extends State<AddProductView> {
                     widget.onAddProduct?.call(
                       _selectedCategory,
                       _nameController.text.trim(),
-                      _modelController.text.trim(),
+                      '',
                       jsonSpec,
                       int.tryParse(_sellingPriceController.text) ?? 0,
                       widget.showCostFields ? int.tryParse(_costPriceController.text) ?? 0 : 0,

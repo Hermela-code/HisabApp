@@ -20,4 +20,5 @@ class AppRouter {
   static const String ownerReport = '/owner-report';
   static const String settings = '/settings';
   static const String editProductAttributes = '/settings/product-attributes';
+  static const String ownerManageAttributes = '/owner/manage-attributes';
 }

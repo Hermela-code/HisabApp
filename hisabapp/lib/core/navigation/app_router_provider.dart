@@ -15,6 +15,7 @@ import '../../features/cashier/export_archive.dart';
 import '../../features/cashier/inventory.dart';
 import '../../features/cashier/record_sale.dart';
 import '../../features/cashier/staff_performance.dart';
+import '../../features/owner/attribute_management_screen.dart';
 import '../../features/owner/branch_detail.dart';
 import '../../features/owner/branches.dart';
 import '../../features/owner/export_archive.dart';
@@ -218,6 +219,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRouter.editProductAttributes,
         builder: (context, state) => const EditProductAttributesPage(),
+      ),
+      GoRoute(
+        path: AppRouter.ownerManageAttributes,
+        builder: (context, state) => const AttributeManagementScreen(),
       ),
     ],
   );
