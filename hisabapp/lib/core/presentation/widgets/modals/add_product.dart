@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hisabapp/application/di.dart';
 import 'package:hisabapp/core/presentation/theme/app_colors.dart';
 import 'package:hisabapp/domain/entities/product.dart';
 
@@ -28,7 +30,46 @@ class _AddProductViewState extends State<AddProductView> {
   String _selectedCategory = ProductCategories.mobile;
   final _nameController = TextEditingController();
   final _modelController = TextEditingController();
-  final _specController = TextEditingController();
+  
+  bool _loading = true;
+  final Map<String, TextEditingController> dynamicControllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAttributes();
+  }
+
+  Future<void> _loadAttributes() async {
+    try {
+      final saved = await appRepository.getProductAttributes();
+      if (!mounted) return;
+      setState(() {
+        for (var attr in saved) {
+          dynamicControllers[attr] = TextEditingController();
+        }
+        _loading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _modelController.dispose();
+    _sellingPriceController.dispose();
+    _costPriceController.dispose();
+    _totalStockController.dispose();
+    _remainingStockController.dispose();
+    _lowStockController.dispose();
+    _highStockController.dispose();
+    for (var controller in dynamicControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
   final _sellingPriceController = TextEditingController();
   final _costPriceController = TextEditingController();
   final _totalStockController = TextEditingController();
@@ -104,9 +145,23 @@ class _AddProductViewState extends State<AddProductView> {
               _buildTextField(_modelController),
               const SizedBox(height: 10),
 
-              _buildLabel('Specification'),
-              _buildTextField(_specController),
-              const SizedBox(height: 15),
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...dynamicControllers.entries.map((entry) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabel(entry.key),
+                    _buildTextField(entry.value),
+                    const SizedBox(height: 10),
+                  ],
+                );
+              }),
+              
+              const SizedBox(height: 5),
 
               if (widget.showCostFields)
                 Row(
@@ -194,11 +249,19 @@ class _AddProductViewState extends State<AddProductView> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
+                    Map<String, String> specMap = {};
+                    for (var entry in dynamicControllers.entries) {
+                      if (entry.value.text.trim().isNotEmpty) {
+                        specMap[entry.key] = entry.value.text.trim();
+                      }
+                    }
+                    String jsonSpec = jsonEncode(specMap);
+
                     widget.onAddProduct?.call(
                       _selectedCategory,
                       _nameController.text.trim(),
                       _modelController.text.trim(),
-                      _specController.text.trim(),
+                      jsonSpec,
                       int.tryParse(_sellingPriceController.text) ?? 0,
                       widget.showCostFields ? int.tryParse(_costPriceController.text) ?? 0 : 0,
                       int.tryParse(_totalStockController.text) ?? 0,
