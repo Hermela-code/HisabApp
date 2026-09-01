@@ -3,7 +3,6 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/jwt_helper.php';
 
 // Security: Dynamically check and allow trusted origins (localhost for development)
-// rather than using a wildcard (*) which is forbidden by secure coding guidelines.
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin) || preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
     header("Access-Control-Allow-Origin: $origin");
@@ -17,64 +16,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 header('Content-Type: application/json');
-// Security: Restrict to POST only; reject all other methods.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method Not Allowed']);
-    exit;
+    exit();
 }
 
-// ---------------------------------------------------------------------------
-// Step 1: Extract and validate the Bearer token from the Authorization header.
-// ---------------------------------------------------------------------------
 $token = get_bearer_token();
-
-// ---------------------------------------------------------------------------
-// Step 2: Verify the token signature and expiry using verify_jwt().
-// Returns the decoded payload array on success, or false on failure.
-// ---------------------------------------------------------------------------
 $payload = verify_jwt($token);
 
 if ($payload === false) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized: Invalid or expired token']);
-    exit;
+    exit();
 }
 
-// ---------------------------------------------------------------------------
-// Step 3: Extract identity fields from the *verified* JWT payload.
-// Security: company_id is NEVER read from the request body. It comes
-// exclusively from the server-signed token, preventing IDOR/horizontal
-// privilege escalation.
-// ---------------------------------------------------------------------------
 $jwtCompanyId = $payload['company_id'] ?? null;
 $jwtRole      = $payload['role']       ?? null;
 
 if (!$jwtCompanyId) {
     http_response_code(403);
     echo json_encode(['error' => 'Forbidden: Token is missing required claims']);
-    exit;
+    exit();
 }
 
-// ---------------------------------------------------------------------------
-// Step 4: Parse the JSON request body and dispatch on 'action'.
-// ---------------------------------------------------------------------------
 $input  = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? null;
 
 if (!$action) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing required field: action']);
-    exit;
+    exit();
 }
 
 switch ($action) {
 
-    // -----------------------------------------------------------------------
-    // ACTION: get_branches
-    // Returns all branches belonging to the authenticated user's company.
-    // Security: WHERE clause is bound exclusively to $jwtCompanyId.
-    // -----------------------------------------------------------------------
     case 'get_branches':
         try {
             $stmt = $pdo->prepare(
@@ -87,37 +63,30 @@ switch ($action) {
 
             $branches = array_map(function ($row) {
                 return [
-                    'id'          => $row['id'],
+                    'id'          => (int)$row['id'],
                     'name'        => $row['name'],
                     'branch_name' => $row['name'],
                     'location'    => $row['location']     ?? '',
                     'cashier'     => $row['cashier_name'] ?? 'Not Assigned',
                     'cashier_name'=> $row['cashier_name'] ?? 'Not Assigned',
-                    'company_id'  => $row['company_id'],
+                    'company_id'  => (int)$row['company_id'],
                 ];
             }, $rows);
 
             echo json_encode(['status' => 'success', 'branches' => $branches]);
         } catch (PDOException $e) {
-            // Security: Log full error server-side; return generic message to client.
             error_log('Branch get_branches DB Error: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['error' => 'Internal Server Error']);
         }
         break;
 
-    // -----------------------------------------------------------------------
-    // ACTION: addBranch / create_branch
-    // Security: Restricted to role 'Owner' only.
-    // company_id is bound from JWT — body-supplied company_id is ignored.
-    // -----------------------------------------------------------------------
     case 'addBranch':
     case 'create_branch':
-        // RBAC enforcement: Only Owners may create branches.
         if (strtolower($jwtRole ?? '') !== 'owner') {
             http_response_code(403);
             echo json_encode(['error' => 'Forbidden: Only Owners can create branches']);
-            exit;
+            exit();
         }
 
         $branchName = $input['name'] ?? $input['branch_name'] ?? null;
@@ -127,7 +96,7 @@ switch ($action) {
         if (empty($branchName)) {
             http_response_code(400);
             echo json_encode(['status' => 'error', 'message' => 'Branch name is required']);
-            exit;
+            exit();
         }
 
         $location = isset($input['location']) && trim($input['location']) !== '' ? trim($input['location']) : 'Unknown';
@@ -144,7 +113,7 @@ switch ($action) {
                 ':cashier_name' => $cashierName,
             ]);
 
-            $newId = $pdo->lastInsertId();
+            $newId = (int)$pdo->lastInsertId();
             echo json_encode([
                 'status'    => 'success',
                 'branch_id' => $newId,
@@ -153,22 +122,15 @@ switch ($action) {
         } catch (PDOException $e) {
             error_log('Branch create_branch DB Error: ' . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+            echo json_encode(['status' => 'error', 'message' => 'Internal Server Error']);
         }
         break;
 
-    // -----------------------------------------------------------------------
-    // ACTION: update_branch
-    // Security: Restricted to role 'Owner' only.
-    // WHERE clause includes company_id from JWT to prevent cross-company edits.
-    // Uses COALESCE so only provided fields are updated.
-    // -----------------------------------------------------------------------
     case 'update_branch':
-        // RBAC enforcement: Only Owners may update branches.
         if ($jwtRole !== 'Owner') {
             http_response_code(403);
             echo json_encode(['error' => 'Forbidden: Only Owners can update branches']);
-            exit;
+            exit();
         }
 
         $branchId    = isset($input['branch_id']) ? (int) $input['branch_id']
@@ -182,13 +144,10 @@ switch ($action) {
         if (!$branchId) {
             http_response_code(400);
             echo json_encode(['error' => 'Missing required field: branch_id']);
-            exit;
+            exit();
         }
 
         try {
-            // Security: AND company_id = :company_id ensures an Owner cannot
-            // modify a branch belonging to a different company, even if they
-            // know its ID (IDOR prevention).
             $stmt = $pdo->prepare(
                 'UPDATE branches
                  SET name        = COALESCE(:name,        name),
@@ -206,8 +165,6 @@ switch ($action) {
             ]);
 
             if ($stmt->rowCount() === 0) {
-                // Either branch doesn't exist or belongs to another company.
-                // Return 404 to avoid leaking existence of other companies' branches.
                 http_response_code(404);
                 echo json_encode(['error' => 'Branch not found']);
             } else {
@@ -220,15 +177,6 @@ switch ($action) {
         }
         break;
 
-    // -----------------------------------------------------------------------
-    // ACTION: delete_branch
-    // Security: WHERE clause includes company_id from JWT (IDOR prevention).
-    // Any authenticated user of the company can delete (no Owner restriction
-    // in the original Dart logic), matching source behaviour. Add RBAC here
-    // if business rules require it in future.
-    // TODO(security): Restrict delete_branch to 'Owner' role if business logic
-    // requires it — the original Dart controller had no RBAC on delete.
-    // -----------------------------------------------------------------------
     case 'delete_branch':
         $branchId = isset($input['branch_id']) ? (int) $input['branch_id']
                   : (isset($input['id'])        ? (int) $input['id'] : null);
@@ -236,12 +184,10 @@ switch ($action) {
         if (!$branchId) {
             http_response_code(400);
             echo json_encode(['error' => 'Missing required field: branch_id']);
-            exit;
+            exit();
         }
 
         try {
-            // Security: AND company_id = :company_id prevents deletion of
-            // branches belonging to other companies (IDOR prevention).
             $stmt = $pdo->prepare(
                 'DELETE FROM branches
                  WHERE id = :branch_id
@@ -265,9 +211,109 @@ switch ($action) {
         }
         break;
 
-    // -----------------------------------------------------------------------
-    // Default: unknown action
-    // -----------------------------------------------------------------------
+    case 'get_branch_costs':
+        $branchId = isset($input['branch_id']) ? (int)$input['branch_id'] : 0;
+        try {
+            if ($branchId > 0) {
+                $stmt = $pdo->prepare('
+                    SELECT id, branch_id, description, amount, expense_date AS created_at 
+                    FROM branch_costs 
+                    WHERE branch_id = :branch_id AND branch_id IN (SELECT id FROM branches WHERE company_id = :company_id)
+                    ORDER BY expense_date DESC
+                ');
+                $stmt->execute([':branch_id' => $branchId, ':company_id' => $jwtCompanyId]);
+            } else {
+                $stmt = $pdo->prepare('
+                    SELECT id, branch_id, description, amount, expense_date AS created_at 
+                    FROM branch_costs 
+                    WHERE branch_id IN (SELECT id FROM branches WHERE company_id = :company_id)
+                    ORDER BY expense_date DESC
+                ');
+                $stmt->execute([':company_id' => $jwtCompanyId]);
+            }
+
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $costs = array_map(function ($row) {
+                return [
+                    'id' => (int)$row['id'],
+                    'branch_id' => (int)$row['branch_id'],
+                    'description' => $row['description'],
+                    'amount' => (float)$row['amount'],
+                    'created_at' => $row['created_at'],
+                ];
+            }, $rows);
+
+            echo json_encode(['status' => 'success', 'costs' => $costs, 'data' => $costs]);
+        } catch (PDOException $e) {
+            error_log('get_branch_costs DB Error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+        break;
+
+    case 'add_branch_cost':
+        $branchId = isset($input['branch_id']) ? (int)$input['branch_id'] : null;
+        $description = isset($input['description']) ? trim($input['description']) : '';
+        $amount = isset($input['amount']) ? (float)$input['amount'] : 0.0;
+        $expenseDate = isset($input['expense_date']) ? trim($input['expense_date']) : date('Y-m-d');
+
+        if (!$branchId || empty($description) || $amount <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing or invalid required fields for branch cost']);
+            exit();
+        }
+
+        try {
+            $stmt = $pdo->prepare('
+                INSERT INTO branch_costs (branch_id, description, amount, expense_date)
+                VALUES (:branch_id, :description, :amount, :expense_date)
+            ');
+            $stmt->execute([
+                ':branch_id' => $branchId,
+                ':description' => $description,
+                ':amount' => $amount,
+                ':expense_date' => $expenseDate,
+            ]);
+
+            $newId = (int)$pdo->lastInsertId();
+            echo json_encode(['status' => 'success', 'cost_id' => $newId, 'message' => 'Branch cost added successfully']);
+        } catch (PDOException $e) {
+            error_log('add_branch_cost DB Error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+        break;
+
+    case 'delete_branch_cost':
+        $costId = isset($input['cost_id']) ? (int)$input['cost_id'] : (isset($input['id']) ? (int)$input['id'] : null);
+
+        if (!$costId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing cost_id']);
+            exit();
+        }
+
+        try {
+            $stmt = $pdo->prepare('
+                DELETE FROM branch_costs 
+                WHERE id = :cost_id 
+                  AND branch_id IN (SELECT id FROM branches WHERE company_id = :company_id)
+            ');
+            $stmt->execute([':cost_id' => $costId, ':company_id' => $jwtCompanyId]);
+
+            if ($stmt->rowCount() === 0) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Branch cost not found']);
+            } else {
+                echo json_encode(['status' => 'success', 'message' => 'Branch cost deleted successfully']);
+            }
+        } catch (PDOException $e) {
+            error_log('delete_branch_cost DB Error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+        break;
+
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Invalid action']);

@@ -1,40 +1,29 @@
 <?php
-require_once 'config.php';
-require_once 'jwt_helper.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/jwt_helper.php';
+
+// Allow trusted dev origins
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin) || preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
+    header("Access-Control-Allow-Origin: $origin");
+}
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 header('Content-Type: application/json');
 
-// Ensure HTTP POST/GET as needed
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Extract and verify Bearer token
-$authHeader = '';
-if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-} elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-    $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
-} elseif (function_exists('apache_request_headers')) {
-    $headers = apache_request_headers();
-    if (isset($headers['Authorization'])) {
-        $authHeader = $headers['Authorization'];
-    } elseif (isset($headers['authorization'])) {
-        $authHeader = $headers['authorization'];
-    }
-}
-
-if (empty($authHeader) || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-    http_response_code(401);
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized: Missing or invalid token format']);
-    exit;
-}
-
-$token = $matches[1];
+$token = get_bearer_token();
 $payload = verify_jwt($token);
 
 if (!$payload) {
-    http_response_code(403);
-    echo json_encode(['status' => 'error', 'message' => 'Forbidden: Invalid or expired token']);
-    exit;
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized: Invalid or expired token']);
+    exit();
 }
 
 $jwt_company_id = $payload['company_id'] ?? null;
@@ -42,13 +31,27 @@ $jwt_branch_id = $payload['branch_id'] ?? null;
 $jwt_user_id = $payload['user_id'] ?? null;
 $jwt_role = $payload['role'] ?? null;
 
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+if (!$jwt_company_id) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Forbidden: Missing company claims']);
+    exit();
+}
+
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+if (empty($action)) {
+    $inputRaw = file_get_contents('php://input');
+    $parsedInput = json_decode($inputRaw, true);
+    if (is_array($parsedInput) && isset($parsedInput['action'])) {
+        $action = $parsedInput['action'];
+    }
+}
 
 if ($action === 'sync_sales') {
-    if ($method !== 'POST') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
         echo json_encode(['status' => 'error', 'message' => 'Method Not Allowed']);
-        exit;
+        exit();
     }
 
     $input = file_get_contents('php://input');
@@ -57,21 +60,63 @@ if ($action === 'sync_sales') {
     if (!is_array($data)) {
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Invalid input, expected an array of sales']);
-        exit;
+        exit();
     }
 
     try {
         $pdo->beginTransaction();
-
         $synced_sale_ids = [];
 
         foreach ($data as $sale) {
-            // Ignore any ids sent in JSON, force use of JWT extracted IDs to ensure cashier is recording for their authorized branch
+            // Determine branch_id
             $branch_id = $jwt_branch_id;
-            $user_id = $jwt_user_id;
-            $staff_id = $jwt_user_id; 
+            if (!$branch_id && isset($sale['branch_id'])) {
+                $checkBranch = $pdo->prepare('SELECT id FROM branches WHERE id = ? AND company_id = ? LIMIT 1');
+                $checkBranch->execute([(int)$sale['branch_id'], $jwt_company_id]);
+                if ($checkBranch->fetch()) {
+                    $branch_id = (int)$sale['branch_id'];
+                }
+            }
 
-            // Validate inputs
+            if (!$branch_id) {
+                // Fallback: pick first branch of the company
+                $firstBranch = $pdo->prepare('SELECT id FROM branches WHERE company_id = ? ORDER BY id ASC LIMIT 1');
+                $firstBranch->execute([$jwt_company_id]);
+                $fbRow = $firstBranch->fetch();
+                if ($fbRow) {
+                    $branch_id = (int)$fbRow['id'];
+                } else {
+                    throw new Exception('No valid branch found for company');
+                }
+            }
+
+            $user_id = $jwt_user_id;
+
+            // Resolve staff_id
+            $staff_id = isset($sale['staff_id']) ? (int)$sale['staff_id'] : 0;
+            if ($staff_id > 0) {
+                $checkStaff = $pdo->prepare('SELECT id FROM staff WHERE id = ? AND branch_id = ? LIMIT 1');
+                $checkStaff->execute([$staff_id, $branch_id]);
+                if (!$checkStaff->fetch()) {
+                    $staff_id = 0;
+                }
+            }
+
+            if ($staff_id === 0) {
+                // Check if any staff exists for this branch
+                $findStaff = $pdo->prepare('SELECT id FROM staff WHERE branch_id = ? ORDER BY id ASC LIMIT 1');
+                $findStaff->execute([$branch_id]);
+                $sRow = $findStaff->fetch();
+                if ($sRow) {
+                    $staff_id = (int)$sRow['id'];
+                } else {
+                    // Auto-provision a default staff entry for this branch
+                    $createStaff = $pdo->prepare('INSERT INTO staff (branch_id, name, role) VALUES (?, "Default Cashier", "Staff")');
+                    $createStaff->execute([$branch_id]);
+                    $staff_id = (int)$pdo->lastInsertId();
+                }
+            }
+
             $customer_name = isset($sale['customer_name']) ? (string)$sale['customer_name'] : 'Walk-in';
             $total_amount = isset($sale['total_amount']) ? (float)$sale['total_amount'] : 0.0;
             $items = isset($sale['items']) ? $sale['items'] : [];
@@ -114,25 +159,13 @@ if ($action === 'sync_sales') {
 
                 $currentStock = (int)$product['current_stock'];
                 if ($currentStock < $qty) {
-                    throw new Exception("Insufficient stock for product ID $pId. Available: $currentStock, Requested: $qty");
+                    throw new Exception("Insufficient stock for product ID {$product['name']}. Available: $currentStock, Requested: $qty");
                 }
 
                 $totalQtySoldInThisSale += $qty;
-                $productName = $product['name'];
 
                 $updateStock = $pdo->prepare('UPDATE products SET current_stock = current_stock - ? WHERE id = ?');
                 $updateStock->execute([$qty, $pId]);
-
-                $updateStaffSummary = $pdo->prepare('
-                    UPDATE staff 
-                    SET sold_items_summary = JSON_SET(
-                        IFNULL(sold_items_summary, JSON_OBJECT()), 
-                        CONCAT(\'$.\', JSON_QUOTE(?)), 
-                        CAST(IFNULL(JSON_EXTRACT(sold_items_summary, CONCAT(\'$.\', JSON_QUOTE(?))), 0) AS UNSIGNED) + ?
-                    ) 
-                    WHERE id = ?
-                ');
-                $updateStaffSummary->execute([$productName, $productName, $qty, $staff_id]);
 
                 $insertItem = $pdo->prepare('INSERT INTO sale_items (sale_id, product_id, quantity, price_at_sale, cost_price_at_sale) VALUES (?, ?, ?, ?, ?)');
                 $insertItem->execute([$sale_id, $pId, $qty, $sPrice, $cPrice]);
@@ -156,23 +189,25 @@ if ($action === 'sync_sales') {
         }
         error_log("Sync Sales Error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'An error occurred while syncing sales. Transaction rolled back.']);
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 
 } elseif ($action === 'get_sales') {
-    if ($method !== 'GET') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         http_response_code(405);
         echo json_encode(['status' => 'error', 'message' => 'Method Not Allowed']);
-        exit;
+        exit();
     }
 
     try {
-        if ($jwt_role === 'Owner') {
+        $requestedBranchId = isset($_GET['branch_id']) ? (int)$_GET['branch_id'] : 0;
+
+        if ($requestedBranchId > 0) {
             $stmt = $pdo->prepare('
                 SELECT 
                   si.product_id, 
                   p.name AS product_name, 
-                  st.name AS salesperson, 
+                  COALESCE(st.name, u.username, "Staff") AS salesperson, 
                   si.quantity, 
                   si.price_at_sale AS unit_price, 
                   (si.quantity * si.price_at_sale) AS total, 
@@ -183,34 +218,38 @@ if ($action === 'sync_sales') {
                 FROM sale_items si
                 JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
-                JOIN staff st ON s.staff_id = st.id
+                LEFT JOIN staff st ON s.staff_id = st.id
+                LEFT JOIN users u ON s.user_id = u.id
+                JOIN branches b ON s.branch_id = b.id
+                WHERE s.branch_id = ? AND b.company_id = ?
+                ORDER BY s.sale_date DESC
+                LIMIT 500
+            ');
+            $stmt->execute([$requestedBranchId, $jwt_company_id]);
+        } else {
+            $stmt = $pdo->prepare('
+                SELECT 
+                  si.product_id, 
+                  p.name AS product_name, 
+                  COALESCE(st.name, u.username, "Staff") AS salesperson, 
+                  si.quantity, 
+                  si.price_at_sale AS unit_price, 
+                  (si.quantity * si.price_at_sale) AS total, 
+                  (si.quantity * si.cost_price_at_sale) AS cost_total, 
+                  s.sale_date AS created_at, 
+                  s.branch_id,
+                  si.sale_id
+                FROM sale_items si
+                JOIN sales s ON si.sale_id = s.id
+                JOIN products p ON si.product_id = p.id
+                LEFT JOIN staff st ON s.staff_id = st.id
+                LEFT JOIN users u ON s.user_id = u.id
                 JOIN branches b ON s.branch_id = b.id
                 WHERE b.company_id = ?
                 ORDER BY s.sale_date DESC
                 LIMIT 500
             ');
             $stmt->execute([$jwt_company_id]);
-        } else {
-            $stmt = $pdo->prepare('
-                SELECT 
-                  si.product_id, 
-                  p.name AS product_name, 
-                  st.name AS salesperson, 
-                  si.quantity, 
-                  si.price_at_sale AS unit_price, 
-                  (si.quantity * si.price_at_sale) AS total, 
-                  (si.quantity * si.cost_price_at_sale) AS cost_total, 
-                  s.sale_date AS created_at, 
-                  s.branch_id,
-                  si.sale_id
-                FROM sale_items si
-                JOIN sales s ON si.sale_id = s.id
-                JOIN products p ON si.product_id = p.id
-                JOIN staff st ON s.staff_id = st.id
-                WHERE s.branch_id = ? AND s.user_id = ? AND DATE(s.sale_date) = CURDATE()
-                ORDER BY s.sale_date DESC
-            ');
-            $stmt->execute([$jwt_branch_id, $jwt_user_id]);
         }
 
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -220,7 +259,7 @@ if ($action === 'sync_sales') {
             $saleId = (int)$row['sale_id'];
             $productId = (int)$row['product_id'];
             $compositeId = ($saleId * 10000) + $productId;
-            
+
             $sales[] = [
                 'id' => $compositeId,
                 'product_id' => $productId,
@@ -244,12 +283,6 @@ if ($action === 'sync_sales') {
     }
 
 } elseif ($action === 'get_reports') {
-    if ($method !== 'GET') {
-        http_response_code(405);
-        echo json_encode(['status' => 'error', 'message' => 'Method Not Allowed']);
-        exit;
-    }
-
     try {
         if ($jwt_role === 'Owner') {
             $stmt = $pdo->prepare('
@@ -271,8 +304,6 @@ if ($action === 'sync_sales') {
         }
 
         $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Decode JSON fields in reports for easier client usage
         foreach ($reports as &$report) {
             if (isset($report['product_summary_json'])) {
                 $report['product_summary_json'] = json_decode($report['product_summary_json'], true);
@@ -287,6 +318,76 @@ if ($action === 'sync_sales') {
         error_log("Get Reports Error: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'An error occurred while retrieving reports.']);
+    }
+
+} elseif ($action === 'generate_daily_snapshot') {
+    $inputRaw = file_get_contents('php://input');
+    $input = json_decode($inputRaw, true);
+    $branch_id = isset($input['branch_id']) ? (int)$input['branch_id'] : $jwt_branch_id;
+
+    if (!$branch_id) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Missing branch_id']);
+        exit();
+    }
+
+    try {
+        $stmtSales = $pdo->prepare('
+            SELECT SUM(s.total_amount) AS income, SUM(si.quantity) AS units, SUM(si.quantity * si.cost_price_at_sale) AS total_cost
+            FROM sales s
+            JOIN sale_items si ON s.id = si.sale_id
+            WHERE s.branch_id = ? AND DATE(s.sale_date) = CURDATE()
+        ');
+        $stmtSales->execute([$branch_id]);
+        $sRow = $stmtSales->fetch();
+
+        $income = (float)($sRow['income'] ?? 0.0);
+        $units = (int)($sRow['units'] ?? 0);
+        $cost = (float)($sRow['total_cost'] ?? 0.0);
+
+        $stmtCosts = $pdo->prepare('SELECT SUM(amount) AS branch_costs FROM branch_costs WHERE branch_id = ? AND expense_date = CURDATE()');
+        $stmtCosts->execute([$branch_id]);
+        $cRow = $stmtCosts->fetch();
+        $bCosts = (float)($cRow['branch_costs'] ?? 0.0);
+
+        $stmtReport = $pdo->prepare('
+            INSERT INTO daily_reports (branch_id, report_date, total_income, total_branch_costs, total_units_sold, status)
+            VALUES (?, CURDATE(), ?, ?, ?, "Generated")
+            ON DUPLICATE KEY UPDATE 
+                total_income = VALUES(total_income),
+                total_branch_costs = VALUES(total_branch_costs),
+                total_units_sold = VALUES(total_units_sold),
+                status = "Updated"
+        ');
+        $stmtReport->execute([$branch_id, $income, $bCosts, $units]);
+
+        echo json_encode(['status' => 'success', 'message' => 'Daily snapshot generated successfully']);
+    } catch (Exception $e) {
+        error_log("Generate Snapshot Error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to generate daily snapshot']);
+    }
+
+} elseif ($action === 'mark_as_deposited') {
+    $inputRaw = file_get_contents('php://input');
+    $input = json_decode($inputRaw, true);
+    $report_id = isset($input['id']) ? (int)$input['id'] : 0;
+
+    if (!$report_id) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Missing report id']);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare('UPDATE daily_reports SET status = "Deposited" WHERE id = ? AND branch_id IN (SELECT id FROM branches WHERE company_id = ?)');
+        $stmt->execute([$report_id, $jwt_company_id]);
+
+        echo json_encode(['status' => 'success', 'message' => 'Report marked as deposited']);
+    } catch (Exception $e) {
+        error_log("Mark Deposited Error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to mark report deposited']);
     }
 
 } else {

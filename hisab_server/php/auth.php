@@ -3,7 +3,6 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/jwt_helper.php';
 
 // Security: Dynamically check and allow trusted origins (localhost for development)
-// rather than using a wildcard (*) which is forbidden by secure coding guidelines.
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (preg_match('/^http:\/\/localhost(:\d+)?$/', $origin) || preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
     header("Access-Control-Allow-Origin: $origin");
@@ -34,7 +33,31 @@ if (!isset($input['action'])) {
 
 $action = $input['action'];
 
-if ($action === 'signup') {
+if ($action === 'register_business') {
+    $businessName = $input['business_name'] ?? $input['company_name'] ?? 'My Business';
+    $businessType = $input['business_type'] ?? 'General';
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO companies (company_name, business_type) VALUES (:name, :type)");
+        $stmt->execute([':name' => $businessName, ':type' => $businessType]);
+        $companyId = (int)$pdo->lastInsertId();
+
+        $stmtBranch = $pdo->prepare("INSERT INTO branches (company_id, name, location) VALUES (:cid, 'Main Branch', 'Headquarters')");
+        $stmtBranch->execute([':cid' => $companyId]);
+        $branchId = (int)$pdo->lastInsertId();
+
+        echo json_encode([
+            'status' => 'success',
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'message' => 'Business registered successfully'
+        ]);
+    } catch (PDOException $e) {
+        error_log("Register Business DB Error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Internal Server Error']);
+    }
+} elseif ($action === 'signup') {
     $username = $input['username'] ?? null;
     $password = $input['password'] ?? null;
     $roleRaw = $input['role'] ?? 'owner';
@@ -50,9 +73,7 @@ if ($action === 'signup') {
         exit();
     }
 
-    // Security: Hash password using Argon2id as per secure backend guidelines
     $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
-    
     $cashierName = (strtolower($role) === 'cashier') ? $username : 'Not Assigned';
 
     try {
@@ -95,8 +116,9 @@ if ($action === 'signup') {
         $pdo->commit();
         echo json_encode(['status' => 'success', 'message' => 'Account successfully created!']);
     } catch (PDOException $e) {
-        $pdo->rollBack();
-        // Security: Log actual error server-side, send generic message to client
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log("Signup Database Error: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Internal Server Error']);
@@ -118,8 +140,7 @@ if ($action === 'signup') {
 
         if ($user && password_verify($password, $user['password'])) {
             $branchId = $user['branch_id'];
-            
-            // Mirroring Dart behavior: update branch_id if missing for cashiers
+
             if ($branchId === null && strtolower($user['role']) === 'cashier') {
                 $stmtBranch = $pdo->prepare("SELECT id FROM branches WHERE LOWER(cashier_name) = LOWER(:username)");
                 $stmtBranch->execute([':username' => trim($user['username'])]);
@@ -134,11 +155,11 @@ if ($action === 'signup') {
             $token = generate_jwt($user['id'], $user['role'], $user['company_id'], $branchId);
             echo json_encode([
                 'status' => 'success',
-                'user_id' => $user['id'],
+                'user_id' => (int)$user['id'],
                 'username' => $user['username'],
                 'role' => $user['role'],
-                'company_id' => $user['company_id'],
-                'branch_id' => $branchId,
+                'company_id' => (int)$user['company_id'],
+                'branch_id' => $branchId ? (int)$branchId : null,
                 'message' => 'Login successful',
                 'token' => $token
             ]);
@@ -147,7 +168,6 @@ if ($action === 'signup') {
             echo json_encode(['status' => 'error', 'message' => 'Invalid username or password']);
         }
     } catch (PDOException $e) {
-        // Security: Log actual error server-side, send generic message to client
         error_log("Login Database Error: " . $e->getMessage());
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Internal Server Error']);
