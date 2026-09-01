@@ -76,30 +76,56 @@ class WelcomeScreen extends StatelessWidget {
             
             const SizedBox(height: 24),
             
-            // --- Action Button ---
+            // --- Action Buttons ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () => context.go('/select-role'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryYellow, 
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => context.go('/business-type', extra: 'owner'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryYellow, 
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Create Business Account',
+                        style: TextStyle(
+                          color: AppColors.textMain,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(
-                      color: AppColors.textMain,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => context.go('/login'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.primaryYellow, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(
+                          color: AppColors.textMain,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
             

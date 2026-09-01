@@ -20,17 +20,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  String? _selectedRole;
-
   @override
   void initState() {
     super.initState();
-    if (widget.role == 'cashier' || widget.role == 'owner') {
-      _selectedRole = widget.role;
-    }
   }
-
-  String get _effectiveRole => _selectedRole ?? widget.role;
 
   Future<void> _onCreateAccount() async {
     FocusScope.of(context).unfocus();
@@ -41,13 +34,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields.')),
-      );
-      return;
-    }
-
-    if (_effectiveRole != 'cashier' && _effectiveRole != 'owner') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your role.')),
       );
       return;
     }
@@ -63,7 +49,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       id: DateTime.now().millisecondsSinceEpoch,
       username: username,
       password: password,
-      role: _effectiveRole == 'cashier' ? UserRole.cashier : UserRole.owner,
+      role: UserRole.owner,
       companyId: 1,
       branchId: null,
     );
@@ -73,15 +59,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (!mounted) return;
 
       ref.read(sessionProvider.notifier).setUser(user);
-      if (_effectiveRole == 'cashier') {
-        ref.read(cashierDataProvider.notifier).reset();
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created successfully.')),
       );
 
-      context.go(homeForRole(user.role));
+      context.go('/business-type', extra: 'owner');
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,28 +93,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   style: TextStyle(fontSize: 13, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Role', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedRole,
-                      hint: const Text('Select your role', style: TextStyle(fontSize: 13)),
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.orange, width: 2)),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'owner', child: Text('Owner', style: TextStyle(fontSize: 13))),
-                        DropdownMenuItem(value: 'cashier', child: Text('Cashier', style: TextStyle(fontSize: 13))),
-                      ],
-                      onChanged: (value) => setState(() => _selectedRole = value),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
+
                 _buildInputField(label: 'User Name', controller: _nameController),
                 const SizedBox(height: 14),
                 _buildInputField(label: 'Password', controller: _passwordController, isPassword: true),

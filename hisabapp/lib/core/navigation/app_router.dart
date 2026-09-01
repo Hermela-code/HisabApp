@@ -1,7 +1,6 @@
 /// Route path constants for [GoRouter].
 class AppRouter {
   static const String landing = '/';
-  static const String selectRole = '/select-role';
   static const String businessType = '/business-type';
   static const String attribute = '/attribute';
   static const String signup = '/signup';

@@ -87,7 +87,7 @@ class _BusinessTypeScreenState extends State<BusinessTypeScreen> {
                 child: SizedBox(
                   width: 100,
                   child: OutlinedButton(
-                    onPressed: () => context.go('/select-role'),
+                    onPressed: () => context.go('/'),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

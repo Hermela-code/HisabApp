@@ -6,7 +6,6 @@ import '../../application/providers/session_provider.dart';
 import '../../features/Auth/login/login.dart';
 import '../../features/Auth/registration/attribute.dart';
 import '../../features/Auth/registration/bussiness_type.dart';
-import '../../features/Auth/registration/select_role.dart';
 import '../../features/Auth/signup/signup.dart';
 import '../../features/Landing_page/landing.dart';
 import '../../features/cashier/branch_cost.dart';
@@ -45,10 +44,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRouter.landing,
         builder: (context, state) => const WelcomeScreen(),
-      ),
-      GoRoute(
-        path: AppRouter.selectRole,
-        builder: (context, state) => const RoleSelectionScreen(),
       ),
       GoRoute(
         path: AppRouter.businessType,

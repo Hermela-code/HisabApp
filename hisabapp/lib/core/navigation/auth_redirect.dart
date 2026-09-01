@@ -4,7 +4,6 @@ import 'app_router.dart';
 /// Routes that do not require a logged-in user.
 const _publicPaths = {
   AppRouter.landing,
-  AppRouter.selectRole,
   AppRouter.businessType,
   AppRouter.attribute,
   AppRouter.signup,
