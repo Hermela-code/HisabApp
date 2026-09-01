@@ -18,7 +18,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String? _selectedRole;
 
   Future<void> _onLogin() async {
     FocusScope.of(context).unfocus();
@@ -32,12 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    if (_selectedRole == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your role before login.')),
-      );
-      return;
-    }
+
 
     final user = await loginUserUseCase.execute(username, password);
     if (!mounted) return;
@@ -48,18 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    final expectedRole =
-        _selectedRole == 'cashier' ? UserRole.cashier : UserRole.owner;
-    if (user.role != expectedRole) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'This account is registered as ${user.role == UserRole.cashier ? 'Cashier' : 'Owner'}, not ${_selectedRole == 'cashier' ? 'Cashier' : 'Owner'}.',
-          ),
-        ),
-      );
-      return;
-    }
+
 
     ref.read(sessionProvider.notifier).setUser(user);
     if (user.role == UserRole.cashier) {
@@ -96,27 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _buildInputField(label: 'Password', controller: _passwordController, isPassword: true),
               const SizedBox(height: 14),
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Role', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedRole,
-                    hint: const Text('Select your role', style: TextStyle(fontSize: 13)),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.orange, width: 2)),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'cashier', child: Text('Cashier', style: TextStyle(fontSize: 13))),
-                      DropdownMenuItem(value: 'owner', child: Text('Owner', style: TextStyle(fontSize: 13))),
-                    ],
-                    onChanged: (value) => setState(() => _selectedRole = value),
-                  ),
-                ],
-              ),
+
               const SizedBox(height: 24),
 
               SizedBox(
